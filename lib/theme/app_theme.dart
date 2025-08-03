@@ -92,7 +92,7 @@ class AppTheme {
         color: textPrimary,
       ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: secondaryDark,
       elevation: 2.0,
       shadowColor: shadowDark,
@@ -243,7 +243,7 @@ class AppTheme {
       trackHeight: 4.0,
       thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
     ),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: accentColor,
       unselectedLabelColor: textSecondary,
       indicatorColor: accentColor,
@@ -299,7 +299,7 @@ class AppTheme {
       modalBackgroundColor: surfaceColor,
       modalElevation: 2.0,
     ),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: surfaceColor,
       elevation: 2.0,
       shadowColor: shadowDark,
@@ -363,7 +363,7 @@ class AppTheme {
         color: onBackgroundLight,
       ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: primaryLight,
       elevation: 2.0,
       shadowColor: shadowLight,
@@ -514,7 +514,7 @@ class AppTheme {
       trackHeight: 4.0,
       thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
     ),
-    tabBarTheme: TabBarTheme(
+    tabBarTheme: TabBarThemeData(
       labelColor: accentColor,
       unselectedLabelColor: textMediumEmphasisLight,
       indicatorColor: accentColor,
@@ -570,7 +570,7 @@ class AppTheme {
       modalBackgroundColor: backgroundLight,
       modalElevation: 2.0,
     ),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       backgroundColor: backgroundLight,
       elevation: 2.0,
       shadowColor: shadowLight,

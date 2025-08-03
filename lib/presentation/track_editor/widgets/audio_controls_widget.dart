@@ -256,19 +256,19 @@ class AudioControlsWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildEqBand('Low', eq['low']!, (value) {
+        _buildEqBand('Low', eq['60'] ?? 0.0, (value) {
           final newEq = Map<String, double>.from(eq);
-          newEq['low'] = value;
+          newEq['60'] = value;
           onEqChanged(newEq);
         }),
-        _buildEqBand('Mid', eq['mid']!, (value) {
+        _buildEqBand('Mid', eq['1000'] ?? 0.0, (value) {
           final newEq = Map<String, double>.from(eq);
-          newEq['mid'] = value;
+          newEq['1000'] = value;
           onEqChanged(newEq);
         }),
-        _buildEqBand('High', eq['high']!, (value) {
+        _buildEqBand('High', eq['12000'] ?? 0.0, (value) {
           final newEq = Map<String, double>.from(eq);
-          newEq['high'] = value;
+          newEq['12000'] = value;
           onEqChanged(newEq);
         }),
       ],
@@ -276,48 +276,50 @@ class AudioControlsWidget extends StatelessWidget {
   }
 
   Widget _buildEqBand(String label, double value, Function(double) onChanged) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-            color: AppTheme.accentColor,
-            fontWeight: FontWeight.w500,
+    return Builder(
+      builder: (context) => Column(
+        children: [
+          Text(
+            label,
+            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.accentColor,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        SizedBox(height: 1.h),
-        SizedBox(
-          height: 20.h,
-          width: 8.w,
-          child: RotatedBox(
-            quarterTurns: 3,
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppTheme.accentColor,
-                inactiveTrackColor: AppTheme.borderColor,
-                thumbColor: AppTheme.accentColor,
-                overlayColor: AppTheme.accentColor.withValues(alpha: 0.2),
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              ),
-              child: Slider(
-                value: value.clamp(-12.0, 12.0),
-                min: -12.0,
-                max: 12.0,
-                onChanged: onChanged,
+          SizedBox(height: 1.h),
+          SizedBox(
+            height: 20.h,
+            width: 8.w,
+            child: RotatedBox(
+              quarterTurns: 3,
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: AppTheme.accentColor,
+                  inactiveTrackColor: AppTheme.borderColor,
+                  thumbColor: AppTheme.accentColor,
+                  overlayColor: AppTheme.accentColor.withValues(alpha: 0.2),
+                  trackHeight: 3,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                ),
+                child: Slider(
+                  value: value.clamp(-12.0, 12.0),
+                  min: -12.0,
+                  max: 12.0,
+                  onChanged: onChanged,
+                ),
               ),
             ),
           ),
-        ),
-        SizedBox(height: 1.h),
-        Text(
-          '${value.toStringAsFixed(1)}dB',
-          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-            color: AppTheme.accentColor,
-            fontWeight: FontWeight.w600,
+          SizedBox(height: 1.h),
+          Text(
+            '${value.toStringAsFixed(1)}dB',
+            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.accentColor,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
