@@ -49,7 +49,7 @@
         
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
             padding: 2rem 0;
         }
@@ -129,6 +129,12 @@
             padding: 2rem 0;
             margin-top: auto;
             background: rgba(0, 0, 0, 0.3);
+        }
+        
+        @media (max-width: 1200px) {
+            .features {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
         
         @media (max-width: 768px) {
@@ -211,7 +217,6 @@
             <section class="cta-section">
                 <h2 style="margin-bottom: 2rem;">Ready to Create Amazing Music?</h2>
                 <div class="button-group">
-                    <button id="viewSourceBtn" class="cta-button" onclick="openSourceCode()">View Source Code</button>
                     <button id="downloadBtn" class="cta-button" onclick="downloadApp()">Download App</button>
                     <button id="shareBtn" class="cta-button" onclick="shareApp()">Share App</button>
                 </div>
@@ -279,10 +284,6 @@
     </footer>
     <script>
         // Button functionality
-        function openSourceCode() {
-            window.open('https://github.com/shankarelavarasan/Rapidmixer6', '_blank');
-        }
-        
         function downloadApp() {
              // Create a modern modal instead of prompt
              const modal = document.createElement('div');
