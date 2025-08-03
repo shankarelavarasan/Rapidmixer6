@@ -83,13 +83,17 @@ class RapidMixerHomePage extends StatelessWidget {
                   SizedBox(height: 40),
                   
                   // Features Grid
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isSmallScreen = constraints.maxWidth < 600;
+                      return GridView.count(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        crossAxisCount: isSmallScreen ? 1 : 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: isSmallScreen ? 3 : 1.2,
+                        children: [
                       _buildFeatureCard(
                         '🤖 AI Stem Separation',
                         'Advanced AI algorithms to separate vocals, drums, bass, and instruments',
@@ -110,27 +114,59 @@ class RapidMixerHomePage extends StatelessWidget {
                         'Low-latency audio processing with professional-grade effects',
                         Colors.green,
                       ),
-                    ],
+                        ],
+                      );
+                    },
                   ),
                   SizedBox(height: 40),
                   
                   // Action Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildActionButton(
-                        'Import Audio',
-                        Icons.upload_file,
-                        Colors.blue,
-                        () => _showComingSoon(context, 'Audio Import'),
-                      ),
-                      _buildActionButton(
-                        'Start Mixing',
-                        Icons.play_arrow,
-                        Colors.green,
-                        () => _showComingSoon(context, 'Audio Mixing'),
-                      ),
-                    ],
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isSmallScreen = constraints.maxWidth < 600;
+                      if (isSmallScreen) {
+                        return Column(
+                          children: [
+                            SizedBox(
+                              width: double.infinity,
+                              child: _buildActionButton(
+                                'Import Audio',
+                                Icons.upload_file,
+                                Colors.blue,
+                                () => Navigator.pushNamed(context, '/audio-import'),
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: _buildActionButton(
+                                'Start Mixing',
+                                Icons.play_arrow,
+                                Colors.green,
+                                () => Navigator.pushNamed(context, '/track-editor'),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildActionButton(
+                            'Import Audio',
+                            Icons.upload_file,
+                            Colors.blue,
+                            () => Navigator.pushNamed(context, '/audio-import'),
+                          ),
+                          _buildActionButton(
+                            'Start Mixing',
+                            Icons.play_arrow,
+                            Colors.green,
+                            () => Navigator.pushNamed(context, '/track-editor'),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   SizedBox(height: 20),
                   
@@ -159,6 +195,38 @@ class RapidMixerHomePage extends StatelessWidget {
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 40),
+                  
+                  // Version Footer
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.white.withOpacity(0.7),
+                          size: 16,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Rapid Mixer v6.0.1 • Built ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 12,
                           ),
                         ),
                       ],

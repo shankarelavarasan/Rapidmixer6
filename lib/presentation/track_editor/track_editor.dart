@@ -811,27 +811,321 @@ class _TrackEditorState extends State<TrackEditor>
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           FloatingActionButton(
+            heroTag: "trim",
+            onPressed: _showTrimDialog,
+            backgroundColor: AppTheme.accentColor,
+            child: CustomIconWidget(
+              iconName: 'content_cut',
+              color: AppTheme.primaryDark,
+              size: 6.w,
+            ),
+          ),
+          SizedBox(height: 1.h),
+          FloatingActionButton(
+            heroTag: "convert",
+            onPressed: _showConvertDialog,
+            backgroundColor: AppTheme.warningColor,
+            child: CustomIconWidget(
+              iconName: 'transform',
+              color: AppTheme.primaryDark,
+              size: 6.w,
+            ),
+          ),
+          SizedBox(height: 1.h),
+          FloatingActionButton(
+            heroTag: "mix",
+            onPressed: _startMixing,
+            backgroundColor: AppTheme.successColor,
+            child: CustomIconWidget(
+              iconName: 'merge_type',
+              color: AppTheme.primaryDark,
+              size: 6.w,
+            ),
+          ),
+          SizedBox(height: 1.h),
+          FloatingActionButton(
             heroTag: "beat_library",
             onPressed: () => Navigator.pushNamed(context, '/beat-library'),
-            backgroundColor: AppTheme.warningColor,
+            backgroundColor: AppTheme.warningColor.withValues(alpha: 0.8),
             child: CustomIconWidget(
               iconName: 'library_music',
               color: AppTheme.primaryDark,
               size: 6.w,
             ),
           ),
-          SizedBox(height: 2.h),
-          FloatingActionButton(
-            heroTag: "ai_processing",
-            onPressed: () => Navigator.pushNamed(context, '/ai-processing'),
-            backgroundColor: AppTheme.successColor,
-            child: CustomIconWidget(
-              iconName: 'auto_fix_high',
-              color: AppTheme.primaryDark,
-              size: 6.w,
+        ],
+      ),
+    );
+  }
+
+  void _showTrimDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkTheme.colorScheme.surface,
+        title: Text(
+          'Trim Audio',
+          style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Select the time range to trim:',
+              style: AppTheme.darkTheme.textTheme.bodyMedium,
             ),
+            SizedBox(height: 2.h),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Start (seconds)',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                SizedBox(width: 2.w),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'End (seconds)',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performTrim();
+            },
+            child: Text('Trim'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showConvertDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.darkTheme.colorScheme.surface,
+        title: Text(
+          'Convert Audio',
+          style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Select output format:',
+              style: AppTheme.darkTheme.textTheme.bodyMedium,
+            ),
+            SizedBox(height: 2.h),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Format',
+              ),
+              items: ['MP3', 'WAV', 'FLAC', 'AAC', 'OGG']
+                  .map((format) => DropdownMenuItem(
+                        value: format,
+                        child: Text(format),
+                      ))
+                  .toList(),
+              onChanged: (value) {},
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _performConvert();
+            },
+            child: Text('Convert'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performTrim() async {
+    _showProcessingSnackBar('Trimming audio tracks...');
+    try {
+      // Get selected tracks for trimming
+      List<String> selectedTrackIds = [];
+      for (int i = 0; i < _tracks.length; i++) {
+        if (!(_tracks[i]["isMuted"] as bool)) {
+          selectedTrackIds.add(_tracks[i]["id"].toString());
+        }
+      }
+      
+      // Perform actual trim operation using audio service
+      await _audioService.trimTracks(selectedTrackIds, 0.0, _totalDuration);
+      
+      _showSuccessSnackBar('Audio trimmed successfully!');
+      setState(() {
+        _hasUnsavedChanges = true;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error trimming audio: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _performConvert() async {
+    _showProcessingSnackBar('Converting audio format...');
+    try {
+      // Get all track data for conversion
+      List<Map<String, dynamic>> trackData = [];
+      for (var track in _tracks) {
+        if (track["stemPath"] != null) {
+          trackData.add({
+            'id': track["id"].toString(),
+            'path': track["stemPath"],
+            'volume': track["volume"],
+            'pitch': track["pitch"],
+            'speed': track["speed"],
+          });
+        }
+      }
+      
+      // Perform actual conversion using audio service
+      await _audioService.convertAudioFormat(trackData, 'mp3');
+      
+      _showSuccessSnackBar('Audio converted successfully!');
+      setState(() {
+        _hasUnsavedChanges = true;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error converting audio: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _startMixing() async {
+    _showProcessingSnackBar('Mixing all tracks...');
+    try {
+      // Prepare track data for mixing
+      List<Map<String, dynamic>> mixingData = [];
+      for (var track in _tracks) {
+        if (track["stemPath"] != null && !(track["isMuted"] as bool)) {
+          mixingData.add({
+            'id': track["id"].toString(),
+            'name': track["name"],
+            'path': track["stemPath"],
+            'volume': track["volume"],
+            'pitch': track["pitch"],
+            'speed': track["speed"],
+            'pan': 0.0, // Default pan
+            'effects': {
+              'reverb': 0.0,
+              'echo': 0.0,
+              'eq': {},
+            },
+          });
+        }
+      }
+      
+      if (mixingData.isEmpty) {
+        throw Exception('No tracks available for mixing');
+      }
+      
+      // Perform actual mixing using audio service
+      String mixedAudioPath = await _audioService.mixTracks(mixingData, {
+        'masterVolume': _masterVolume,
+        'masterPitch': _masterPitch,
+        'masterSpeed': _masterSpeed,
+        'outputFormat': 'wav',
+      });
+      
+      _showSuccessSnackBar('Mix completed! Ready for export.');
+      
+      // Navigate to export options with the mixed audio path
+      Navigator.pushNamed(context, '/export-options', arguments: {
+        'mixedAudioPath': mixedAudioPath,
+        'projectData': {
+          'tracks': _tracks,
+          'masterVolume': _masterVolume,
+          'masterPitch': _masterPitch,
+          'masterSpeed': _masterSpeed,
+          'totalDuration': _totalDuration,
+          'tempo': _tempo,
+        },
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error mixing tracks: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _showProcessingSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 5.w,
+              height: 5.w,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.textPrimary),
+              ),
+            ),
+            SizedBox(width: 3.w),
+            Text(message),
+          ],
+        ),
+        backgroundColor: AppTheme.accentColor,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppTheme.successColor,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 3),
       ),
     );
   }

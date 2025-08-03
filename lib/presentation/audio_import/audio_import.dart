@@ -231,15 +231,218 @@ class _AudioImportState extends State<AudioImport> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          SelectedFilePreview(
-            fileData: selectedFile!,
-            onRemove: () => setState(() => selectedFile = null),
-            onPlay: _togglePlayback,
-            isPlaying: isPlaying,
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 4.w),
+            padding: EdgeInsets.all(4.w),
+            decoration: BoxDecoration(
+              color: AppTheme.darkTheme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.accentColor.withValues(alpha: 0.3),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.accentColor.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with file info
+                Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(3.w),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: CustomIconWidget(
+                        iconName: 'audio_file',
+                        color: AppTheme.accentColor,
+                        size: 6.w,
+                      ),
+                    ),
+                    SizedBox(width: 3.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Selected Audio File',
+                            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          SizedBox(height: 0.5.h),
+                          Text(
+                            selectedFile!['name'],
+                            style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                              color: AppTheme.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        setState(() {
+                          selectedFile = null;
+                        });
+                      },
+                      icon: CustomIconWidget(
+                        iconName: 'close',
+                        color: AppTheme.textSecondary,
+                        size: 5.w,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 3.w),
+                
+                // File Details
+                Container(
+                  padding: EdgeInsets.all(3.w),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryDark.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildFileDetail('Size', selectedFile!['size']),
+                      SizedBox(width: 4.w),
+                      _buildFileDetail('Duration', selectedFile!['duration']),
+                      SizedBox(width: 4.w),
+                      _buildFileDetail('Format', selectedFile!['format']),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 3.w),
+                
+                // Audio Preview Controls
+                Container(
+                  padding: EdgeInsets.all(3.w),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryDark.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.accentColor.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Audio Preview',
+                        style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 2.w),
+                      Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.accentColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: IconButton(
+                              onPressed: _togglePlayback,
+                              icon: CustomIconWidget(
+                                iconName: isPlaying ? 'pause' : 'play_arrow',
+                                color: AppTheme.accentColor,
+                                size: 6.w,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 3.w),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                LinearProgressIndicator(
+                                  value: 0.0,
+                                  backgroundColor: AppTheme.textSecondary.withValues(alpha: 0.2),
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
+                                  minHeight: 4,
+                                ),
+                                SizedBox(height: 1.w),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '0:00',
+                                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                    Text(
+                                      selectedFile!['duration'],
+                                      style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                                        color: AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(width: 3.w),
+                          IconButton(
+                            onPressed: () {
+                              _showProcessingSnackBar('Volume control coming soon!');
+                            },
+                            icon: CustomIconWidget(
+                              iconName: 'volume_up',
+                              color: AppTheme.textSecondary,
+                              size: 5.w,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
           SizedBox(height: 2.h),
           _buildProcessingInfo(),
           SizedBox(height: 4.h),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildFileDetail(String label, String value) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+              fontSize: 10,
+            ),
+          ),
+          SizedBox(height: 0.5.h),
+          Text(
+            value,
+            style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
+              color: AppTheme.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -416,12 +619,30 @@ class _AudioImportState extends State<AudioImport> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['mp3', 'wav', 'flac', 'aac', 'm4a'],
+        allowedExtensions: ['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg'],
         allowMultiple: false,
       );
 
       if (result != null && result.files.isNotEmpty) {
         final file = result.files.first;
+        
+        // Validate file size (max 100MB)
+        if (file.size > 100 * 1024 * 1024) {
+          _showErrorSnackBar('File size too large. Maximum allowed size is 100MB.');
+          return;
+        }
+        
+        // Validate file extension
+        final allowedExtensions = ['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg'];
+        final fileExtension = file.extension?.toLowerCase();
+        if (fileExtension == null || !allowedExtensions.contains(fileExtension)) {
+          _showErrorSnackBar('Unsupported file format. Please select: ${allowedExtensions.join(', ')}');
+          return;
+        }
+        
+        // Show loading indicator
+        _showProcessingSnackBar('Loading file...');
+        
         final fileSizeInMB = (file.size / (1024 * 1024)).toStringAsFixed(1);
 
         // Get actual audio duration
@@ -442,9 +663,13 @@ class _AudioImportState extends State<AudioImport> {
             "isUrl": false,
           };
         });
+        
+        _showSuccessSnackBar('File loaded successfully!');
+      } else {
+        _showErrorSnackBar('No file selected.');
       }
     } catch (e) {
-      _showErrorSnackBar("Failed to select file. Please try again.");
+      _showErrorSnackBar("Failed to select file: ${e.toString()}");
     }
   }
 
@@ -688,9 +913,20 @@ class _AudioImportState extends State<AudioImport> {
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            CustomIconWidget(
+              iconName: 'error_outline',
+              color: AppTheme.textPrimary,
+              size: 4.w,
+            ),
+            SizedBox(width: 2.w),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: AppTheme.errorColor,
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
       ),
     );
   }
@@ -698,8 +934,44 @@ class _AudioImportState extends State<AudioImport> {
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            CustomIconWidget(
+              iconName: 'check_circle_outline',
+              color: AppTheme.textPrimary,
+              size: 4.w,
+            ),
+            SizedBox(width: 2.w),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: AppTheme.successColor,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+  
+  void _showProcessingSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 4.w,
+              height: 4.w,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppTheme.textPrimary,
+                ),
+              ),
+            ),
+            SizedBox(width: 3.w),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppTheme.accentColor,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
       ),

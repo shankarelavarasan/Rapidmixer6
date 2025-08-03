@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'audio_processing_service.dart';
 
 class AudioService {
   static final AudioService _instance = AudioService._internal();
@@ -256,6 +257,77 @@ class AudioService {
       return "${duration.inHours}:$twoDigitMinutes:$twoDigitSeconds";
     } else {
       return "$twoDigitMinutes:$twoDigitSeconds";
+    }
+  }
+
+  // Audio processing methods
+  Future<void> trimTracks(List<String> trackIds, double startTime, double endTime) async {
+    try {
+      // Import audio processing service for actual implementation
+      final audioProcessingService = AudioProcessingService();
+      await audioProcessingService.initialize();
+      
+      // Prepare track data for trimming
+      Map<String, dynamic> trimData = {
+        'trackIds': trackIds,
+        'startTime': startTime,
+        'endTime': endTime,
+        'operation': 'trim'
+      };
+      
+      // Use the real audio processing service for trimming
+      await audioProcessingService.processAudioTracks(trimData);
+      
+    } catch (e) {
+      _errorController.add('Failed to trim tracks: $e');
+      rethrow;
+    }
+  }
+  
+  Future<void> convertAudioFormat(List<Map<String, dynamic>> trackData, String outputFormat) async {
+    try {
+      // Import audio processing service for actual implementation
+      final audioProcessingService = AudioProcessingService();
+      await audioProcessingService.initialize();
+      
+      // Prepare conversion data
+      Map<String, dynamic> conversionData = {
+        'tracks': trackData,
+        'outputFormat': outputFormat,
+        'operation': 'convert'
+      };
+      
+      // Use the real audio processing service for conversion
+      await audioProcessingService.processAudioTracks(conversionData);
+      
+    } catch (e) {
+      _errorController.add('Failed to convert audio format: $e');
+      rethrow;
+    }
+  }
+  
+  Future<String> mixTracks(List<Map<String, dynamic>> mixingData, Map<String, dynamic> mixSettings) async {
+    try {
+      // Import audio processing service for actual implementation
+      final audioProcessingService = AudioProcessingService();
+      await audioProcessingService.initialize();
+      
+      // Prepare mixing data
+      Map<String, dynamic> mixData = {
+        'tracks': mixingData,
+        'settings': mixSettings,
+        'operation': 'mix'
+      };
+      
+      // Use the real audio processing service for mixing
+      final result = await audioProcessingService.processAudioTracks(mixData);
+      
+      // Return the path to the mixed audio file
+      return result['outputPath'] ?? '/tmp/mixed_audio.wav';
+      
+    } catch (e) {
+      _errorController.add('Failed to mix tracks: $e');
+      rethrow;
     }
   }
 

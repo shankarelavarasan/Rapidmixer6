@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../presentation/audio_import/audio_import.dart';
+import '../presentation/ai_processing/ai_processing.dart';
 import '../presentation/beat_library/beat_library.dart';
 import '../presentation/track_editor/track_editor.dart';
 import '../presentation/export_options/export_options.dart';
@@ -18,6 +19,7 @@ class AppRoutes {
   static Map<String, WidgetBuilder> routes = {
     initial: (context) => AudioImport(),
     audioImport: (context) => AudioImport(),
+    aiProcessing: (context) => AIProcessing(),
     beatLibrary: (context) => BeatLibrary(),
     trackEditor: (context) => TrackEditor(),
     exportOptions: (context) => ExportOptions(),

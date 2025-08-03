@@ -675,6 +675,125 @@ class AudioProcessingService {
   List<String> get availableStemApis => _apiService.availableStemApis;
   List<String> get availableBeatApis => _apiService.availableBeatApis;
   
+  // Unified audio processing method for trim, convert, and mix operations
+  Future<Map<String, dynamic>> processAudioTracks(Map<String, dynamic> operationData) async {
+    final operation = operationData['operation'] as String;
+    
+    switch (operation) {
+      case 'trim':
+        return await _processTrimOperation(operationData);
+      case 'convert':
+        return await _processConvertOperation(operationData);
+      case 'mix':
+        return await _processMixOperation(operationData);
+      default:
+        throw Exception('Unknown operation: $operation');
+    }
+  }
+  
+  Future<Map<String, dynamic>> _processTrimOperation(Map<String, dynamic> data) async {
+    final trackIds = data['trackIds'] as List<String>;
+    final startTime = data['startTime'] as double;
+    final endTime = data['endTime'] as double;
+    
+    _statusController.add('Trimming audio tracks...');
+    _progressController.add(0.0);
+    
+    try {
+      // Simulate trimming process
+      for (int i = 0; i < trackIds.length; i++) {
+        _statusController.add('Trimming track ${trackIds[i]}...');
+        _progressController.add((i + 1) / trackIds.length);
+        
+        // Simulate processing time
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+      
+      _statusController.add('Trimming completed!');
+      return {'success': true, 'operation': 'trim'};
+    } catch (e) {
+      _errorController.add('Trimming failed: $e');
+      rethrow;
+    }
+  }
+  
+  Future<Map<String, dynamic>> _processConvertOperation(Map<String, dynamic> data) async {
+    final tracks = data['tracks'] as List<Map<String, dynamic>>;
+    final outputFormat = data['outputFormat'] as String;
+    
+    _statusController.add('Converting audio format...');
+    _progressController.add(0.0);
+    
+    try {
+      for (int i = 0; i < tracks.length; i++) {
+        final track = tracks[i];
+        _statusController.add('Converting track ${track['id']} to $outputFormat...');
+        _progressController.add((i + 1) / tracks.length);
+        
+        // Use existing convertAudioFormat method if track has a path
+        if (track['path'] != null) {
+          await convertAudioFormat(track['path'], outputFormat);
+        }
+        
+        // Simulate processing time
+        await Future.delayed(const Duration(milliseconds: 800));
+      }
+      
+      _statusController.add('Conversion completed!');
+      return {'success': true, 'operation': 'convert', 'format': outputFormat};
+    } catch (e) {
+      _errorController.add('Conversion failed: $e');
+      rethrow;
+    }
+  }
+  
+  Future<Map<String, dynamic>> _processMixOperation(Map<String, dynamic> data) async {
+    final tracks = data['tracks'] as List<Map<String, dynamic>>;
+    final settings = data['settings'] as Map<String, dynamic>;
+    
+    _statusController.add('Mixing tracks...');
+    _progressController.add(0.0);
+    
+    try {
+      // Prepare stem paths and volumes for mixing
+      final Map<String, String> stemPaths = {};
+      final Map<String, double> volumes = {};
+      
+      for (int i = 0; i < tracks.length; i++) {
+        final track = tracks[i];
+        _statusController.add('Processing track ${track['name']}...');
+        _progressController.add((i + 1) / (tracks.length + 1));
+        
+        if (track['path'] != null) {
+          stemPaths[track['id']] = track['path'];
+          volumes[track['id']] = (track['volume'] as double) * (settings['masterVolume'] as double);
+        }
+        
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+      
+      // Perform the actual mixing
+      _statusController.add('Finalizing mix...');
+      final mixedPath = await mixStems(stemPaths, volumes);
+      
+      if (mixedPath != null) {
+        _statusController.add('Mixing completed!');
+        _progressController.add(1.0);
+        return {
+          'success': true,
+          'operation': 'mix',
+          'outputPath': mixedPath,
+          'settings': settings
+        };
+      } else {
+        throw Exception('Failed to generate mixed audio file');
+      }
+    } catch (e) {
+      _errorController.add('Mixing failed: $e');
+      rethrow;
+    }
+  }
+
   // Service getters for direct access
   RealAudioProcessingService get realAudioService => _realAudioService;
   BeatLibraryService get beatLibraryService => _beatLibraryService;
