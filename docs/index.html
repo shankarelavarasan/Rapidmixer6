@@ -70,7 +70,7 @@
       <div class="loader"></div>
     </div>
 
-    <script src="flutter_bootstrap.js" async></script>
+    <script src="flutter.js" defer></script>
 
     <script>
       function removeLoader() {
@@ -83,6 +83,19 @@
       window.addEventListener("flutter-first-frame", function () {
         removeLoader();
         window.parent.postMessage({ type: "LOADING_COMPLETED", }, "*");
+      });
+
+      window.addEventListener('load', function(ev) {
+        _flutter.loader.loadEntrypoint({
+          serviceWorker: {
+            serviceWorkerVersion: null,
+          },
+          onEntrypointLoaded: function(engineInitializer) {
+            engineInitializer.initializeEngine().then(function(appRunner) {
+              appRunner.runApp();
+            });
+          }
+        });
       });
     </script>
 
