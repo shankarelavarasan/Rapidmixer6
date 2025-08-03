@@ -210,8 +210,29 @@
             
             <section class="cta-section">
                 <h2 style="margin-bottom: 2rem;">Ready to Create Amazing Music?</h2>
-                <a href="https://github.com/shankarelavarasan/Rapidmixer6" class="cta-button">View Source Code</a>
-                <a href="#" class="cta-button">Download App</a>
+                <div class="button-group">
+                    <button id="viewSourceBtn" class="cta-button" onclick="openSourceCode()">View Source Code</button>
+                    <button id="downloadBtn" class="cta-button" onclick="downloadApp()">Download App</button>
+                    <button id="shareBtn" class="cta-button" onclick="shareApp()">Share App</button>
+                </div>
+                
+                <!-- Contact Form -->
+                <div class="contact-form" style="margin-top: 3rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    <h3 style="margin-bottom: 1.5rem;">Get Updates</h3>
+                    <form id="contactForm" onsubmit="submitForm(event)">
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="email-input" style="display: block; margin-bottom: 0.5rem; text-align: left;">Email Address:</label>
+                            <input type="email" id="email-input" name="email" required 
+                                   style="width: 100%; padding: 0.75rem; border-radius: 5px; border: none; background: rgba(255,255,255,0.9); color: #333;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label for="name-input" style="display: block; margin-bottom: 0.5rem; text-align: left;">Name (Optional):</label>
+                            <input type="text" id="name-input" name="name" 
+                                   style="width: 100%; padding: 0.75rem; border-radius: 5px; border: none; background: rgba(255,255,255,0.9); color: #333;">
+                        </div>
+                        <button type="submit" class="cta-button" style="margin-top: 1rem;">Subscribe for Updates</button>
+                    </form>
+                </div>
             </section>
             
             <section class="tech-stack">
@@ -254,5 +275,149 @@
             <p style="margin-top: 1rem; opacity: 0.7;">Built with ❤️ using Flutter and AI</p>
         </div>
     </footer>
+    <script>
+        // Button functionality
+        function openSourceCode() {
+            window.open('https://github.com/shankarelavarasan/Rapidmixer6', '_blank');
+        }
+        
+        function downloadApp() {
+            // Show download options
+            const options = [
+                'Android APK (Coming Soon)',
+                'iOS App Store (Coming Soon)',
+                'Web Version (Available Now)'
+            ];
+            
+            let message = 'Choose your platform:\n\n';
+            options.forEach((option, index) => {
+                message += `${index + 1}. ${option}\n`;
+            });
+            
+            const choice = prompt(message + '\nEnter number (1-3):');
+            
+            switch(choice) {
+                case '1':
+                    alert('Android APK will be available soon! Subscribe for updates.');
+                    break;
+                case '2':
+                    alert('iOS version will be available soon! Subscribe for updates.');
+                    break;
+                case '3':
+                    alert('Web version is coming soon! Currently in development.');
+                    break;
+                default:
+                    if (choice !== null) {
+                        alert('Invalid selection. Please try again.');
+                    }
+            }
+        }
+        
+        function shareApp() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'RapidMixer - AI-Powered Music Production',
+                    text: 'Check out RapidMixer, an amazing AI-powered music production app!',
+                    url: window.location.href
+                }).catch(console.error);
+            } else {
+                // Fallback for browsers that don't support Web Share API
+                const url = window.location.href;
+                const text = `Check out RapidMixer - AI-Powered Music Production App! ${url}`;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        alert('Link copied to clipboard! Share it with your friends.');
+                    }).catch(() => {
+                        showShareOptions(url);
+                    });
+                } else {
+                    showShareOptions(url);
+                }
+            }
+        }
+        
+        function showShareOptions(url) {
+            const shareText = encodeURIComponent('Check out RapidMixer - AI-Powered Music Production App!');
+            const shareUrl = encodeURIComponent(url);
+            
+            const options = [
+                `Twitter: https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`,
+                `Facebook: https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
+                `LinkedIn: https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`
+            ];
+            
+            let message = 'Share on:\n\n';
+            options.forEach((option, index) => {
+                message += `${index + 1}. ${option.split(':')[0]}\n`;
+            });
+            
+            const choice = prompt(message + '\nEnter number (1-3) or cancel:');
+            
+            if (choice >= 1 && choice <= 3) {
+                const selectedUrl = options[choice - 1].split(': ')[1];
+                window.open(selectedUrl, '_blank');
+            }
+        }
+        
+        function submitForm(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email-input').value;
+            const name = document.getElementById('name-input').value;
+            
+            if (!email) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+            
+            // Simulate form submission
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.textContent = 'Subscribing...';
+            submitBtn.disabled = true;
+            
+            setTimeout(() => {
+                alert(`Thank you${name ? ', ' + name : ''}! You've been subscribed to updates at ${email}`);
+                
+                // Reset form
+                document.getElementById('contactForm').reset();
+                
+                // Reset button
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }, 1500);
+        }
+        
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add hover effects to feature cards
+            const featureCards = document.querySelectorAll('.feature-card');
+            featureCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.boxShadow = '0 10px 30px rgba(255,255,255,0.2)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.boxShadow = 'none';
+                });
+            });
+            
+            // Add click animation to buttons
+            const buttons = document.querySelectorAll('.cta-button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1.05)';
+                        setTimeout(() => {
+                            this.style.transform = 'scale(1)';
+                        }, 100);
+                    }, 100);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
