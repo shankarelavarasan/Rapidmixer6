@@ -70,20 +70,9 @@
       <div class="loader"></div>
     </div>
 
-    <script src="flutter.js" defer></script>
+    <script src="flutter_bootstrap.js" async></script>
 
     <script>
-      var scriptLoaded = false;
-
-      function loadMainDartJs() {
-        if (scriptLoaded) return;
-        scriptLoaded = true;
-        var scriptTag = document.createElement("script");
-        scriptTag.src = "main.dart.js";
-        scriptTag.type = "application/javascript";
-        document.body.appendChild(scriptTag);
-      }
-
       function removeLoader() {
         var loader = document.getElementById("loading-container");
         if (loader) {
@@ -95,8 +84,6 @@
         removeLoader();
         window.parent.postMessage({ type: "LOADING_COMPLETED", }, "*");
       });
-
-      loadMainDartJs();
     </script>
 
     <script>
