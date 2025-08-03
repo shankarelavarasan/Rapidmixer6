@@ -13,6 +13,24 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Color(0xFF1A1A1A),
+        fontFamily: 'Roboto',
+        textTheme: TextTheme(
+          displayLarge: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          displayMedium: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          displaySmall: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          headlineLarge: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          headlineMedium: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          headlineSmall: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          titleLarge: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          titleMedium: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          titleSmall: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          bodyLarge: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          bodyMedium: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          bodySmall: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          labelLarge: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          labelMedium: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+          labelSmall: TextStyle(fontFamilyFallback: ['Noto Sans', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Emoji']),
+        ),
       ),
       debugShowCheckedModeBanner: false,
       home: RapidMixerHomePage(),
@@ -55,13 +73,13 @@ class RapidMixerHomePage extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.music_note,
                           size: 80,
                           color: Colors.white,
                         ),
-                        SizedBox(height: 16),
-                        Text(
+                        const SizedBox(height: 16),
+                        const Text(
                           '🎵 RapidMixer',
                           style: TextStyle(
                             fontSize: 32,
@@ -69,7 +87,7 @@ class RapidMixerHomePage extends StatelessWidget {
                             color: Colors.white,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'AI-Powered Audio Mixing Platform',
                           style: TextStyle(
@@ -80,99 +98,103 @@ class RapidMixerHomePage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   
                   // Features Grid
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final isSmallScreen = constraints.maxWidth < 600;
-                      return GridView.count(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        crossAxisCount: isSmallScreen ? 1 : 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: isSmallScreen ? 3 : 1.2,
-                        children: [
-                      _buildFeatureCard(
-                        '🤖 AI Stem Separation',
-                        'Advanced AI algorithms to separate vocals, drums, bass, and instruments',
-                        Colors.cyan,
-                      ),
-                      _buildFeatureCard(
-                        '🎛️ Multi-Track Editor',
-                        'Professional mixing console with real-time effects and automation',
-                        Colors.purple,
-                      ),
-                      _buildFeatureCard(
-                        '🎼 Beat Library',
-                        'AI-generated beats and comprehensive sound library',
-                        Colors.orange,
-                      ),
-                      _buildFeatureCard(
-                        '⚡ Real-Time Processing',
-                        'Low-latency audio processing with professional-grade effects',
-                        Colors.green,
-                      ),
-                        ],
+                      return RepaintBoundary(
+                        child: GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: isSmallScreen ? 1 : 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: isSmallScreen ? 3 : 1.2,
+                          children: [
+                        _buildFeatureCard(
+                          '🤖 AI Stem Separation',
+                          'Advanced AI algorithms to separate vocals, drums, bass, and instruments',
+                          Colors.cyan,
+                        ),
+                        _buildFeatureCard(
+                          '🎛️ Multi-Track Editor',
+                          'Professional mixing console with real-time effects and automation',
+                          Colors.purple,
+                        ),
+                        _buildFeatureCard(
+                          '🎼 Beat Library',
+                          'AI-generated beats and comprehensive sound library',
+                          Colors.orange,
+                        ),
+                        _buildFeatureCard(
+                          '⚡ Real-Time Processing',
+                          'Low-latency audio processing with professional-grade effects',
+                          Colors.green,
+                        ),
+                          ],
+                        ),
                       );
                     },
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   
                   // Action Buttons
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isSmallScreen = constraints.maxWidth < 600;
-                      if (isSmallScreen) {
-                        return Column(
+                  RepaintBoundary(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isSmallScreen = constraints.maxWidth < 600;
+                        if (isSmallScreen) {
+                          return Column(
+                            children: [
+                              SizedBox(
+                                width: double.infinity,
+                                child: _buildActionButton(
+                                  'Import Audio',
+                                  Icons.upload_file,
+                                  Colors.blue,
+                                  () => Navigator.pushNamed(context, '/audio-import'),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: _buildActionButton(
+                                  'Start Mixing',
+                                  Icons.play_arrow,
+                                  Colors.green,
+                                  () => Navigator.pushNamed(context, '/track-editor'),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            SizedBox(
-                              width: double.infinity,
-                              child: _buildActionButton(
-                                'Import Audio',
-                                Icons.upload_file,
-                                Colors.blue,
-                                () => Navigator.pushNamed(context, '/audio-import'),
-                              ),
+                            _buildActionButton(
+                              'Import Audio',
+                              Icons.upload_file,
+                              Colors.blue,
+                              () => Navigator.pushNamed(context, '/audio-import'),
                             ),
-                            SizedBox(height: 16),
-                            SizedBox(
-                              width: double.infinity,
-                              child: _buildActionButton(
-                                'Start Mixing',
-                                Icons.play_arrow,
-                                Colors.green,
-                                () => Navigator.pushNamed(context, '/track-editor'),
-                              ),
+                            _buildActionButton(
+                              'Start Mixing',
+                              Icons.play_arrow,
+                              Colors.green,
+                              () => Navigator.pushNamed(context, '/track-editor'),
                             ),
                           ],
                         );
-                      }
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildActionButton(
-                            'Import Audio',
-                            Icons.upload_file,
-                            Colors.blue,
-                            () => Navigator.pushNamed(context, '/audio-import'),
-                          ),
-                          _buildActionButton(
-                            'Start Mixing',
-                            Icons.play_arrow,
-                            Colors.green,
-                            () => Navigator.pushNamed(context, '/track-editor'),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                  SizedBox(height: 20),
+                      },
+                     ),
+                   ),
+                   const SizedBox(height: 20),
                   
                   // Status
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -184,13 +206,13 @@ class RapidMixerHomePage extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.check_circle,
                           color: Colors.green,
                           size: 20,
                         ),
-                        SizedBox(width: 8),
-                        Text(
+                        const SizedBox(width: 8),
+                        const Text(
                           'All Features Implemented & Ready',
                           style: TextStyle(
                             color: Colors.white,
@@ -200,11 +222,11 @@ class RapidMixerHomePage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 40),
                   
                   // Version Footer
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.05),
                       borderRadius: BorderRadius.circular(8),
@@ -221,7 +243,7 @@ class RapidMixerHomePage extends StatelessWidget {
                           color: Colors.white.withOpacity(0.7),
                           size: 16,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Text(
                           'Rapid Mixer v6.0.1 • Built ${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}',
                           style: TextStyle(
@@ -242,71 +264,75 @@ class RapidMixerHomePage extends StatelessWidget {
   }
   
   Widget _buildFeatureCard(String title, String description, Color color) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+    return RepaintBoundary(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
           ),
-          SizedBox(height: 8),
-          Expanded(
-            child: Text(
-              description,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withOpacity(0.8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Expanded(
+              child: Text(
+                description,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.8),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
   
   Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.3),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: Colors.white, size: 20),
-            SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
-            ),
-          ],
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -316,10 +342,10 @@ class RapidMixerHomePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Color(0xFF2D2D30),
+        backgroundColor: const Color(0xFF2D2D30),
         title: Text(
           feature,
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
         content: Text(
           'This feature is fully implemented in the Flutter app! The web version showcases the UI design and capabilities.',
@@ -328,7 +354,7 @@ class RapidMixerHomePage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Got it', style: TextStyle(color: Colors.blue)),
+            child: const Text('Got it', style: TextStyle(color: Colors.blue)),
           ),
         ],
       ),
