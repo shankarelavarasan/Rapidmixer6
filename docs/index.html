@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RapidMixer - AI-Powered Music Production App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-description {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .cta-section {
+            text-align: center;
+            padding: 3rem 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+            margin: 0 1rem;
+        }
+        
+        .cta-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .tech-stack {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 2rem 0;
+            margin-top: 2rem;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            text-align: center;
+        }
+        
+        .tech-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: auto;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .cta-button {
+                display: block;
+                margin: 1rem auto;
+                width: fit-content;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">🎵 RapidMixer</div>
+            <div class="tagline">AI-Powered Music Production Made Simple</div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <section class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-title">AI Stem Separation</div>
+                    <div class="feature-description">
+                        Upload any song and automatically separate it into individual instrument tracks using advanced AI technology. Extract vocals, drums, bass, piano, guitar, and more.
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎛️</div>
+                    <div class="feature-title">Professional Multi-Track Editor</div>
+                    <div class="feature-description">
+                        Edit each separated track with professional controls: volume, pitch, speed, pan, mute/solo. Apply real-time effects like reverb, echo, and 3-band EQ.
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎼</div>
+                    <div class="feature-title">Comprehensive Beat Library</div>
+                    <div class="feature-description">
+                        Browse beats across 9+ genres including Hip Hop, Electronic, Rock, Jazz, Classical, Pop, Reggae, Country, and R&B with waveform visualization.
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Advanced Mixing Features</div>
+                    <div class="feature-description">
+                        Control tempo, use built-in metronome, set loop points, navigate timeline precisely, and enjoy auto-save functionality with fast/slow playback options.
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📤</div>
+                    <div class="feature-title">Professional Export</div>
+                    <div class="feature-description">
+                        Export in multiple formats (MP3, WAV, FLAC, AAC) with quality settings, metadata support, time range export, and watermark options.
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-title">Cross-Platform</div>
+                    <div class="feature-description">
+                        Full functionality on web browsers and native mobile support for Android and iOS with responsive design for all screen sizes.
+                    </div>
+                </div>
+            </section>
+            
+            <section class="cta-section">
+                <h2 style="margin-bottom: 2rem;">Ready to Create Amazing Music?</h2>
+                <a href="https://github.com/shankarelavarasan/Rapidmixer6" class="cta-button">View Source Code</a>
+                <a href="#" class="cta-button">Download App</a>
+            </section>
+            
+            <section class="tech-stack">
+                <div class="container">
+                    <h2 style="text-align: center; margin-bottom: 2rem;">Built With Modern Technology</h2>
+                    <div class="tech-grid">
+                        <div class="tech-item">
+                            <strong>Flutter</strong><br>
+                            Cross-platform framework
+                        </div>
+                        <div class="tech-item">
+                            <strong>Spleeter API</strong><br>
+                            AI stem separation
+                        </div>
+                        <div class="tech-item">
+                            <strong>Voice.ai API</strong><br>
+                            Advanced AI processing
+                        </div>
+                        <div class="tech-item">
+                            <strong>FFmpeg</strong><br>
+                            Audio processing
+                        </div>
+                        <div class="tech-item">
+                            <strong>Dart</strong><br>
+                            Programming language
+                        </div>
+                        <div class="tech-item">
+                            <strong>Material Design</strong><br>
+                            Modern UI/UX
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 RapidMixer. Professional music production made simple with AI-powered technology.</p>
+            <p style="margin-top: 1rem; opacity: 0.7;">Built with ❤️ using Flutter and AI</p>
+        </div>
+    </footer>
+</body>
+</html>
