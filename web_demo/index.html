@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapid Mixer - Audio Mixing Studio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem 2rem;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(45deg, #87ceeb, #4169e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .mixer-board {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .track-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .track:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .track-title {
+            font-weight: bold;
+            color: #87ceeb;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #4169e1, #87ceeb);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(65, 105, 225, 0.3);
+        }
+
+        .controls {
+            margin: 1rem 0;
+        }
+
+        .control-group {
+            margin: 0.8rem 0;
+        }
+
+        .control-label {
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #87ceeb;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #87ceeb;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .play-btn {
+            background: linear-gradient(45deg, #32cd32, #228b22);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(50, 205, 50, 0.3);
+        }
+
+        .master-controls {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .export-btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .waveform {
+            width: 100%;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            margin: 1rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .waveform-bars {
+            display: flex;
+            align-items: end;
+            height: 100%;
+            padding: 5px;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, #4169e1, #87ceeb);
+            margin: 0 1px;
+            border-radius: 1px;
+            transition: height 0.1s ease;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎵 Rapid Mixer</h1>
+    </div>
+
+    <div class="container">
+        <div class="mixer-board">
+            <h2>Audio Mixing Studio</h2>
+            <p>Professional-grade audio mixing with real-time effects and AI-powered features</p>
+            
+            <div class="track-container" id="trackContainer">
+                <!-- Tracks will be dynamically added here -->
+            </div>
+            
+            <div class="master-controls">
+                <h3>Master Controls</h3>
+                <div class="control-group">
+                    <label class="control-label">Master Volume</label>
+                    <input type="range" class="slider" id="masterVolume" min="0" max="100" value="75">
+                </div>
+                <button class="play-btn" onclick="playAll()">▶️ Play All</button>
+                <button class="play-btn" onclick="stopAll()">⏹️ Stop All</button>
+                <button class="export-btn" onclick="exportMix()">🎯 Export Mix</button>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🎛️</div>
+                <h3>Professional Mixing</h3>
+                <p>Multi-track audio mixing with professional-grade controls for volume, pan, EQ, and effects</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>AI-Powered Processing</h3>
+                <p>Advanced AI algorithms for audio enhancement, noise reduction, and automatic mixing</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎵</div>
+                <h3>Real-time Effects</h3>
+                <p>Apply reverb, echo, compression, and EQ in real-time with instant preview</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <h3>Cross-Platform</h3>
+                <p>Works seamlessly across desktop, mobile, and web platforms</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="status">
+        Ready to mix audio
+    </div>
+
+    <script>
+        let tracks = [];
+        let audioContext;
+        let masterGain;
+
+        // Initialize Web Audio API
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.connect(audioContext.destination);
+                updateStatus('Audio system initialized');
+            } catch (e) {
+                updateStatus('Audio not supported in this browser');
+            }
+        }
+
+        // Add a new track
+        function addTrack() {
+            const trackId = tracks.length + 1;
+            const track = {
+                id: trackId,
+                name: `Track ${trackId}`,
+                volume: 75,
+                pan: 0,
+                reverb: 0,
+                echo: 0,
+                eq: { low: 0, mid: 0, high: 0 },
+                audioBuffer: null,
+                source: null,
+                gainNode: null,
+                isPlaying: false
+            };
+            
+            tracks.push(track);
+            renderTrack(track);
+        }
+
+        // Render a track in the UI
+        function renderTrack(track) {
+            const trackContainer = document.getElementById('trackContainer');
+            const trackElement = document.createElement('div');
+            trackElement.className = 'track';
+            trackElement.innerHTML = `
+                <div class="track-header">
+                    <span class="track-title">${track.name}</span>
+                    <input type="file" class="file-input" id="file-${track.id}" accept="audio/*" onchange="loadAudio(${track.id}, this)">
+                    <button class="upload-btn" onclick="document.getElementById('file-${track.id}').click()">📁 Load Audio</button>
+                </div>
+                
+                <div class="waveform">
+                    <div class="waveform-bars" id="waveform-${track.id}">
+                        ${generateWaveformBars()}
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <label class="control-label">Volume: <span id="vol-val-${track.id}">${track.volume}%</span></label>
+                        <input type="range" class="slider" min="0" max="100" value="${track.volume}" 
+                               oninput="updateTrackControl(${track.id}, 'volume', this.value)">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Pan: <span id="pan-val-${track.id}">${track.pan}</span></label>
+                        <input type="range" class="slider" min="-100" max="100" value="${track.pan}" 
+                               oninput="updateTrackControl(${track.id}, 'pan', this.value)">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Reverb: <span id="reverb-val-${track.id}">${track.reverb}%</span></label>
+                        <input type="range" class="slider" min="0" max="100" value="${track.reverb}" 
+                               oninput="updateTrackControl(${track.id}, 'reverb', this.value)">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">Echo: <span id="echo-val-${track.id}">${track.echo}%</span></label>
+                        <input type="range" class="slider" min="0" max="100" value="${track.echo}" 
+                               oninput="updateTrackControl(${track.id}, 'echo', this.value)">
+                    </div>
+                </div>
+                
+                <button class="play-btn" onclick="toggleTrack(${track.id})" id="play-btn-${track.id}">▶️ Play</button>
+            `;
+            
+            trackContainer.appendChild(trackElement);
+        }
+
+        // Generate waveform visualization bars
+        function generateWaveformBars() {
+            let bars = '';
+            for (let i = 0; i < 50; i++) {
+                const height = Math.random() * 80 + 10;
+                bars += `<div class="bar" style="height: ${height}%"></div>`;
+            }
+            return bars;
+        }
+
+        // Load audio file
+        function loadAudio(trackId, input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            const track = tracks.find(t => t.id === trackId);
+            track.name = file.name.replace(/\.[^/.]+$/, "");
+            
+            updateStatus(`Loading ${file.name}...`);
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (audioContext) {
+                    audioContext.decodeAudioData(e.target.result)
+                        .then(buffer => {
+                            track.audioBuffer = buffer;
+                            updateStatus(`${file.name} loaded successfully`);
+                            // Update track title
+                            document.querySelector(`#trackContainer .track:nth-child(${trackId}) .track-title`).textContent = track.name;
+                        })
+                        .catch(err => {
+                            updateStatus(`Error loading ${file.name}`);
+                        });
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Update track controls
+        function updateTrackControl(trackId, control, value) {
+            const track = tracks.find(t => t.id === trackId);
+            if (!track) return;
+            
+            track[control] = parseFloat(value);
+            document.getElementById(`${control}-val-${trackId}`).textContent = 
+                control === 'pan' ? value : `${value}%`;
+            
+            // Apply real-time effects if track is playing
+            if (track.isPlaying && track.gainNode) {
+                if (control === 'volume') {
+                    track.gainNode.gain.value = value / 100;
+                }
+            }
+        }
+
+        // Toggle track playback
+        function toggleTrack(trackId) {
+            const track = tracks.find(t => t.id === trackId);
+            if (!track || !track.audioBuffer) {
+                updateStatus('No audio loaded for this track');
+                return;
+            }
+            
+            const playBtn = document.getElementById(`play-btn-${trackId}`);
+            
+            if (track.isPlaying) {
+                // Stop track
+                if (track.source) {
+                    track.source.stop();
+                    track.source = null;
+                    track.gainNode = null;
+                }
+                track.isPlaying = false;
+                playBtn.textContent = '▶️ Play';
+                updateStatus(`Stopped ${track.name}`);
+            } else {
+                // Play track
+                track.source = audioContext.createBufferSource();
+                track.gainNode = audioContext.createGain();
+                
+                track.source.buffer = track.audioBuffer;
+                track.source.connect(track.gainNode);
+                track.gainNode.connect(masterGain);
+                
+                // Apply current settings
+                track.gainNode.gain.value = track.volume / 100;
+                
+                track.source.start();
+                track.isPlaying = true;
+                playBtn.textContent = '⏹️ Stop';
+                updateStatus(`Playing ${track.name}`);
+                
+                // Handle track end
+                track.source.onended = () => {
+                    track.isPlaying = false;
+                    playBtn.textContent = '▶️ Play';
+                    track.source = null;
+                    track.gainNode = null;
+                };
+            }
+        }
+
+        // Play all tracks
+        function playAll() {
+            tracks.forEach(track => {
+                if (!track.isPlaying && track.audioBuffer) {
+                    toggleTrack(track.id);
+                }
+            });
+        }
+
+        // Stop all tracks
+        function stopAll() {
+            tracks.forEach(track => {
+                if (track.isPlaying) {
+                    toggleTrack(track.id);
+                }
+            });
+        }
+
+        // Export mix (placeholder)
+        function exportMix() {
+            updateStatus('Export feature coming soon!');
+            alert('Export functionality will be available in the full version. This demo shows the UI and basic playback capabilities.');
+        }
+
+        // Update status
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Update master volume
+        document.getElementById('masterVolume').addEventListener('input', function(e) {
+            if (masterGain) {
+                masterGain.gain.value = e.target.value / 100;
+            }
+        });
+
+        // Initialize the application
+        window.addEventListener('load', function() {
+            initAudio();
+            // Add initial tracks
+            addTrack();
+            addTrack();
+            addTrack();
+            
+            updateStatus('Ready to load audio files');
+        });
+
+        // Handle user interaction for audio context
+        document.addEventListener('click', function() {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        });
+    </script>
+</body>
+</html>
