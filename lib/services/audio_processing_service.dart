@@ -146,6 +146,32 @@ class AudioProcessingService {
     }
   }
 
+  Future<Map<String, String>> _tryWebSpleeterAPI(String inputUrl) async {
+    try {
+      // Try to use web-based Spleeter API
+      final response = await _apiService.separateStems(inputUrl, 'spleeter');
+      if (response != null && response.isNotEmpty) {
+        return response;
+      }
+    } catch (e) {
+      print('Spleeter API failed: $e');
+    }
+    return {};
+  }
+
+  Future<Map<String, String>> _tryVoiceAIWebAPI(String inputUrl) async {
+    try {
+      // Try to use Voice.ai API for stem separation
+      final response = await _apiService.separateStems(inputUrl, 'voiceai');
+      if (response != null && response.isNotEmpty) {
+        return response;
+      }
+    } catch (e) {
+      print('Voice.ai API failed: $e');
+    }
+    return {};
+  }
+
   Future<Map<String, String>> _mockStemSeparationWeb(String inputUrl) async {
     final steps = [
       'Analyzing audio frequencies...',
@@ -183,11 +209,7 @@ class AudioProcessingService {
       _statusController.add('Searching beat library...');
       
       // Use beat library service
-      final results = await _beatLibraryService.searchBeats(
-        query,
-        category: category,
-        limit: limit,
-      );
+      final results = _beatLibraryService.searchBeats(query);
       
       // Also search online sources via API service
       final onlineResults = await _apiService.searchBeats(
@@ -230,12 +252,13 @@ class AudioProcessingService {
       }
       
       // Fallback to local generation
-      return await _beatLibraryService.generateBeat(
-        style: style,
-        bpm: bpm,
-        duration: duration,
-        description: description,
+      final result = await _beatLibraryService.generateBeat(
+        style,
+        bpm,
+        duration.toInt(),
+        description ?? '',
       );
+      return result?['audioData'];
     } catch (e) {
       _errorController.add('Beat generation failed: $e');
       return null;
@@ -254,11 +277,11 @@ class AudioProcessingService {
       _statusController.add('Starting professional export...');
       
       return await _exportService.exportAudio(
-        tracks: tracks,
+        inputPath: '',
         outputFormat: outputFormat,
         quality: quality,
         metadata: metadata,
-        masterEffects: masterEffects,
+        tracks: tracks,
       );
     } catch (e) {
       _errorController.add('Export failed: $e');

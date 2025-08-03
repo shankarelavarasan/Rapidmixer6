@@ -1,467 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RapidMixer - AI-Powered Music Production App</title>
+<html>
+  <head>
+    <base href="/" />
+
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta name="description" content="A new Flutter project." />
+
+    <!-- iOS meta tags & icons -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="persistent_project" />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+
+    <title>rapid_mixer</title>
+    <link rel="manifest" href="manifest.json" />
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      body {
+        background: #000;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      #loading-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+      }
+
+      .loader {
+        border: 6px solid rgba(255, 255, 255, 0.2);
+        border-top: 6px solid #87ceeb;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+        100% {
+          transform: rotate(360deg);
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        header {
-            padding: 2rem 0;
-            text-align: center;
-        }
-        
-        .logo {
-            font-size: 3rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .tagline {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 2rem;
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2rem;
-            padding: 2rem 0;
-        }
-        
-        .feature-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-title {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-description {
-            opacity: 0.9;
-            line-height: 1.6;
-        }
-        
-        .cta-section {
-            text-align: center;
-            padding: 3rem 0;
-        }
-        
-        .cta-button {
-            display: inline-block;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            color: white;
-            padding: 1rem 2rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1rem;
-            transition: transform 0.3s ease;
-            margin: 0 1rem;
-        }
-        
-        .cta-button:hover {
-            transform: scale(1.05);
-        }
-        
-        .tech-stack {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 2rem 0;
-            margin-top: 2rem;
-        }
-        
-        .tech-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            text-align: center;
-        }
-        
-        .tech-item {
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 2rem 0;
-            margin-top: auto;
-            background: rgba(0, 0, 0, 0.3);
-        }
-        
-        @media (max-width: 1200px) {
-            .features {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .logo {
-                font-size: 2rem;
-            }
-            
-            .features {
-                grid-template-columns: 1fr;
-            }
-            
-            .cta-button {
-                display: block;
-                margin: 1rem auto;
-                width: fit-content;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <div class="logo">🎵 RapidMixer</div>
-            <div class="tagline">AI-Powered Music Production Made Simple</div>
-        </div>
-    </header>
-    
-    <main>
-        <div class="container">
-            <section class="features">
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <div class="feature-title">AI Stem Separation</div>
-                    <div class="feature-description">
-                        Upload any song and automatically separate it into individual instrument tracks using advanced AI technology. Extract vocals, drums, bass, piano, guitar, and more.
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🎛️</div>
-                    <div class="feature-title">Professional Multi-Track Editor</div>
-                    <div class="feature-description">
-                        Edit each separated track with professional controls: volume, pitch, speed, pan, mute/solo. Apply real-time effects like reverb, echo, and 3-band EQ.
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🎼</div>
-                    <div class="feature-title">Comprehensive Beat Library</div>
-                    <div class="feature-description">
-                        Browse beats across 9+ genres including Hip Hop, Electronic, Rock, Jazz, Classical, Pop, Reggae, Country, and R&B with waveform visualization.
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <div class="feature-title">Advanced Mixing Features</div>
-                    <div class="feature-description">
-                        Control tempo, use built-in metronome, set loop points, navigate timeline precisely, and enjoy auto-save functionality with fast/slow playback options.
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📤</div>
-                    <div class="feature-title">Professional Export</div>
-                    <div class="feature-description">
-                        Export in multiple formats (MP3, WAV, FLAC, AAC) with quality settings, metadata support, time range export, and watermark options.
-                    </div>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <div class="feature-title">Cross-Platform</div>
-                    <div class="feature-description">
-                        Full functionality on web browsers and native mobile support for Android and iOS with responsive design for all screen sizes.
-                    </div>
-                </div>
-            </section>
-            
-            <section class="cta-section">
-                <h2 style="margin-bottom: 2rem;">Ready to Create Amazing Music?</h2>
-                <div class="button-group">
-                    <button id="downloadBtn" class="cta-button" onclick="downloadApp()">Download App</button>
-                    <button id="shareBtn" class="cta-button" onclick="shareApp()">Share App</button>
-                </div>
-                
-                <!-- Contact Form -->
-                <div class="contact-form" style="margin-top: 3rem; max-width: 500px; margin-left: auto; margin-right: auto;">
-                    <h3 style="margin-bottom: 1.5rem;">Get Updates</h3>
-                    <form id="contactForm" onsubmit="submitForm(event)">
-                        <div class="form-group" style="margin-bottom: 1rem;">
-                             <label for="email-input" style="display: block; margin-bottom: 0.5rem; text-align: left;">Email Address:</label>
-                             <input type="email" id="email-input" name="email" required autocomplete="email"
-                                    placeholder="Enter your email address"
-                                    style="width: 100%; padding: 0.75rem; border-radius: 5px; border: none; background: rgba(255,255,255,0.9); color: #333;">
-                         </div>
-                         <div class="form-group" style="margin-bottom: 1rem;">
-                             <label for="name-input" style="display: block; margin-bottom: 0.5rem; text-align: left;">Name (Optional):</label>
-                             <input type="text" id="name-input" name="name" autocomplete="name"
-                                    placeholder="Enter your name"
-                                    style="width: 100%; padding: 0.75rem; border-radius: 5px; border: none; background: rgba(255,255,255,0.9); color: #333;">
-                         </div>
-                        <button type="submit" class="cta-button" style="margin-top: 1rem;">Subscribe for Updates</button>
-                    </form>
-                </div>
-            </section>
-            
-            <section class="tech-stack">
-                <div class="container">
-                    <h2 style="text-align: center; margin-bottom: 2rem;">Built With Modern Technology</h2>
-                    <div class="tech-grid">
-                        <div class="tech-item">
-                            <strong>Flutter</strong><br>
-                            Cross-platform framework
-                        </div>
-                        <div class="tech-item">
-                            <strong>Spleeter API</strong><br>
-                            AI stem separation
-                        </div>
-                        <div class="tech-item">
-                            <strong>Voice.ai API</strong><br>
-                            Advanced AI processing
-                        </div>
-                        <div class="tech-item">
-                            <strong>FFmpeg</strong><br>
-                            Audio processing
-                        </div>
-                        <div class="tech-item">
-                            <strong>Dart</strong><br>
-                            Programming language
-                        </div>
-                        <div class="tech-item">
-                            <strong>Material Design</strong><br>
-                            Modern UI/UX
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </main>
-    
-    <footer>
-        <div class="container">
-            <p>&copy; 2024 RapidMixer. Professional music production made simple with AI-powered technology.</p>
-            <p style="margin-top: 1rem; opacity: 0.7;">Built with ❤️ using Flutter and AI</p>
-        </div>
-    </footer>
+  </head>
+  <body
+    style="
+      background-color: black;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    "
+  >
+    <!-- Loader Container -->
+    <div id="loading-container">
+      <div class="loader"></div>
+    </div>
+
+    <script src="flutter.js" defer></script>
+
     <script>
-        // Button functionality
-        function downloadApp() {
-             // Create a modern modal instead of prompt
-             const modal = document.createElement('div');
-             modal.style.cssText = `
-                 position: fixed;
-                 top: 0;
-                 left: 0;
-                 width: 100%;
-                 height: 100%;
-                 background: rgba(0,0,0,0.8);
-                 display: flex;
-                 justify-content: center;
-                 align-items: center;
-                 z-index: 1000;
-             `;
-             
-             const modalContent = document.createElement('div');
-             modalContent.style.cssText = `
-                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                 padding: 2rem;
-                 border-radius: 15px;
-                 text-align: center;
-                 color: white;
-                 max-width: 400px;
-                 width: 90%;
-             `;
-             
-             modalContent.innerHTML = `
-                 <h3 style="margin-bottom: 1.5rem;">Choose Your Platform</h3>
-                 <div style="margin-bottom: 1rem;">
-                     <button onclick="selectPlatform('android')" class="platform-btn" style="width: 100%; margin: 0.5rem 0; padding: 1rem; background: rgba(255,255,255,0.2); border: none; border-radius: 8px; color: white; cursor: pointer;">📱 Android APK (Coming Soon)</button>
-                 </div>
-                 <div style="margin-bottom: 1rem;">
-                     <button onclick="selectPlatform('ios')" class="platform-btn" style="width: 100%; margin: 0.5rem 0; padding: 1rem; background: rgba(255,255,255,0.2); border: none; border-radius: 8px; color: white; cursor: pointer;">🍎 iOS App Store (Coming Soon)</button>
-                 </div>
-                 <div style="margin-bottom: 1.5rem;">
-                     <button onclick="selectPlatform('web')" class="platform-btn" style="width: 100%; margin: 0.5rem 0; padding: 1rem; background: rgba(255,255,255,0.2); border: none; border-radius: 8px; color: white; cursor: pointer;">🌐 Web Version (Available Now)</button>
-                 </div>
-                 <button onclick="closeModal()" style="background: rgba(255,255,255,0.3); border: none; padding: 0.5rem 1rem; border-radius: 5px; color: white; cursor: pointer;">Close</button>
-             `;
-             
-             modal.appendChild(modalContent);
-             document.body.appendChild(modal);
-             
-             // Add click outside to close
-             modal.addEventListener('click', function(e) {
-                 if (e.target === modal) {
-                     closeModal();
-                 }
-             });
-             
-             window.selectPlatform = function(platform) {
-                 switch(platform) {
-                     case 'android':
-                         alert('🚀 Android APK will be available soon! Subscribe for updates to get notified.');
-                         break;
-                     case 'ios':
-                         alert('🚀 iOS version will be available soon! Subscribe for updates to get notified.');
-                         break;
-                     case 'web':
-                         alert('🚀 Web version is coming soon! Currently in development. Stay tuned!');
-                         break;
-                 }
-                 closeModal();
-             };
-             
-             window.closeModal = function() {
-                 document.body.removeChild(modal);
-                 delete window.selectPlatform;
-                 delete window.closeModal;
-             };
-         }
-        
-        function shareApp() {
-            if (navigator.share) {
-                navigator.share({
-                    title: 'RapidMixer - AI-Powered Music Production',
-                    text: 'Check out RapidMixer, an amazing AI-powered music production app!',
-                    url: window.location.href
-                }).catch(console.error);
-            } else {
-                // Fallback for browsers that don't support Web Share API
-                const url = window.location.href;
-                const text = `Check out RapidMixer - AI-Powered Music Production App! ${url}`;
-                
-                if (navigator.clipboard) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        alert('Link copied to clipboard! Share it with your friends.');
-                    }).catch(() => {
-                        showShareOptions(url);
-                    });
-                } else {
-                    showShareOptions(url);
-                }
-            }
+      var scriptLoaded = false;
+
+      function loadMainDartJs() {
+        if (scriptLoaded) return;
+        scriptLoaded = true;
+        var scriptTag = document.createElement("script");
+        scriptTag.src = "main.dart.js";
+        scriptTag.type = "application/javascript";
+        document.body.appendChild(scriptTag);
+      }
+
+      function removeLoader() {
+        var loader = document.getElementById("loading-container");
+        if (loader) {
+          loader.style.display = "none";
         }
-        
-        function showShareOptions(url) {
-            const shareText = encodeURIComponent('Check out RapidMixer - AI-Powered Music Production App!');
-            const shareUrl = encodeURIComponent(url);
-            
-            const options = [
-                `Twitter: https://twitter.com/intent/tweet?text=${shareText}&url=${shareUrl}`,
-                `Facebook: https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
-                `LinkedIn: https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`
-            ];
-            
-            let message = 'Share on:\n\n';
-            options.forEach((option, index) => {
-                message += `${index + 1}. ${option.split(':')[0]}\n`;
-            });
-            
-            const choice = prompt(message + '\nEnter number (1-3) or cancel:');
-            
-            if (choice >= 1 && choice <= 3) {
-                const selectedUrl = options[choice - 1].split(': ')[1];
-                window.open(selectedUrl, '_blank');
-            }
-        }
-        
-        function submitForm(event) {
-            event.preventDefault();
-            
-            const email = document.getElementById('email-input').value;
-            const name = document.getElementById('name-input').value;
-            
-            if (!email) {
-                alert('Please enter a valid email address.');
-                return;
-            }
-            
-            // Simulate form submission
-            const submitBtn = event.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            
-            submitBtn.textContent = 'Subscribing...';
-            submitBtn.disabled = true;
-            
-            setTimeout(() => {
-                alert(`Thank you${name ? ', ' + name : ''}! You've been subscribed to updates at ${email}`);
-                
-                // Reset form
-                document.getElementById('contactForm').reset();
-                
-                // Reset button
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            }, 1500);
-        }
-        
-        // Add some interactive effects
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add hover effects to feature cards
-            const featureCards = document.querySelectorAll('.feature-card');
-            featureCards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.boxShadow = '0 10px 30px rgba(255,255,255,0.2)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.boxShadow = 'none';
-                });
-            });
-            
-            // Add click animation to buttons
-            const buttons = document.querySelectorAll('.cta-button');
-            buttons.forEach(button => {
-                button.addEventListener('click', function() {
-                    this.style.transform = 'scale(0.95)';
-                    setTimeout(() => {
-                        this.style.transform = 'scale(1.05)';
-                        setTimeout(() => {
-                            this.style.transform = 'scale(1)';
-                        }, 100);
-                    }, 100);
-                });
-            });
-        });
+      }
+
+      window.addEventListener("flutter-first-frame", function () {
+        removeLoader();
+        window.parent.postMessage({ type: "LOADING_COMPLETED", }, "*");
+      });
+
+      loadMainDartJs();
     </script>
-</body>
+
+    <script>
+      // Navigation tracking
+      (function (history) {
+        const pushState = history.pushState;
+        const replaceState = history.replaceState;
+
+        function logNavigation(method, url) {
+          // console.log(`[IN FLUTTER APP] - Navigated (${method}): ${url}`);
+          window.parent.postMessage({ type: "NAVIGATION", method, url }, "*");
+        }
+
+        history.pushState = function (state, title, url) {
+          logNavigation("pushState", url);
+          return pushState.apply(history, arguments);
+        };
+
+        history.replaceState = function (state, title, url) {
+          logNavigation("replaceState", url);
+          return replaceState.apply(history, arguments);
+        };
+
+        window.addEventListener("popstate", function (event) {
+          logNavigation("popstate", location.href);
+        });
+      })(window.history);
+    </script>
+  </body>
 </html>

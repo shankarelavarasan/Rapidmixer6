@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
@@ -605,8 +605,8 @@ class MultiTrackEditorService {
       // Update track levels (simulate audio analysis)
       for (var track in _tracks) {
         if (!track['isMuted']) {
-          track['level'] = Random().nextDouble() * 0.8;
-          track['peakLevel'] = max(track['peakLevel'], track['level']);
+          track['level'] = math.Random().nextDouble() * 0.8;
+          track['peakLevel'] = math.max(track['peakLevel'] as double, track['level'] as double);
           track['rmsLevel'] = track['level'] * 0.7;
         } else {
           track['level'] = 0.0;
@@ -691,11 +691,11 @@ class MultiTrackEditorService {
       0xFF00D4FF, 0xFFFF4757, 0xFF00C896, 0xFFFFB800,
       0xFF9C88FF, 0xFFFF6B6B, 0xFF4ECDC4, 0xFFFFE66D,
     ];
-    return colors[Random().nextInt(colors.length)];
+    return colors[math.Random().nextInt(colors.length)];
   }
 
   List<double> _generateWaveform() {
-    final random = Random();
+    final random = math.Random();
     return List.generate(100, (index) => random.nextDouble());
   }
 
