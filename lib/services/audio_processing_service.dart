@@ -63,18 +63,39 @@ class AudioProcessingService {
       _platformService = CrossPlatformService();
       _apiService = ApiIntegrationService();
       
-      // Initialize services in order
-      await _platformService.initialize();
-      await _apiService.initialize();
-      await _realAudioService.initialize();
-      await _beatLibraryService.initialize();
-      await _exportService.initialize();
-      await _multiTrackService.initialize();
-      await _mixingService.initialize();
+      // Initialize services in order with proper error handling
+      await _platformService.initialize().catchError((e) {
+        _errorController.add('Platform service initialization failed: $e');
+      });
+      
+      await _apiService.initialize().catchError((e) {
+        _errorController.add('API service initialization failed: $e');
+      });
+      
+      await _realAudioService.initialize().catchError((e) {
+        _errorController.add('Real audio service initialization failed: $e');
+      });
+      
+      await _beatLibraryService.initialize().catchError((e) {
+        _errorController.add('Beat library service initialization failed: $e');
+      });
+      
+      await _exportService.initialize().catchError((e) {
+        _errorController.add('Export service initialization failed: $e');
+      });
+      
+      await _multiTrackService.initialize().catchError((e) {
+        _errorController.add('Multi-track service initialization failed: $e');
+      });
+      
+      await _mixingService.initialize().catchError((e) {
+        _errorController.add('Mixing service initialization failed: $e');
+      });
       
       _statusController.add('Comprehensive audio processing service ready');
     } catch (e) {
       _errorController.add('Failed to initialize audio service: $e');
+      rethrow;
     }
   }
 
@@ -93,31 +114,57 @@ class AudioProcessingService {
 
   // Try multiple free AI separation services
   Future<Map<String, String>> _separateStems(String inputFilePath) async {
+    if (_isProcessing) {
+      _errorController.add('Another processing operation is already in progress');
+      return {};
+    }
+    
     _isProcessing = true;
     _statusController.add('Initializing AI stem separation...');
+    _progressController.add(0.0);
 
     try {
+      // Validate input file
+      if (!await File(inputFilePath).exists()) {
+        throw Exception('Input file does not exist: $inputFilePath');
+      }
+      
+      _progressController.add(0.1);
+      
       // Try real API integration first
       final apiResult = await _apiService.separateStems(
         inputFilePath,
         preferredApi: 'auto',
         stemCount: 4,
-      );
+      ).timeout(Duration(minutes: 5), onTimeout: () {
+        throw TimeoutException('API request timed out', Duration(minutes: 5));
+      });
+      
+      _progressController.add(0.5);
       
       if (apiResult != null && apiResult.isNotEmpty) {
         _statusController.add('Stem separation completed via API');
+        _progressController.add(1.0);
         return apiResult;
       }
       
       // Fallback to real audio processing service
       _statusController.add('Using local processing for stem separation...');
-      return await _realAudioService.separateStems(
+      _progressController.add(0.6);
+      
+      final localResult = await _realAudioService.separateStems(
         inputFilePath,
         stemCount: 4,
         quality: 'high',
-      );
+      ).timeout(Duration(minutes: 10), onTimeout: () {
+        throw TimeoutException('Local processing timed out', Duration(minutes: 10));
+      });
+      
+      _progressController.add(1.0);
+      return localResult;
     } catch (e) {
       _errorController.add('All stem separation services failed: $e');
+      _progressController.add(0.8);
       return await _mockStemSeparationMobile(inputFilePath);
     } finally {
       _isProcessing = false;
@@ -205,23 +252,51 @@ class AudioProcessingService {
     String category = 'all',
     int limit = 20,
   }) async {
+    if (query.trim().isEmpty) {
+      _errorController.add('Search query cannot be empty');
+      return [];
+    }
+    
     try {
       _statusController.add('Searching beat library...');
+      _progressController.add(0.0);
       
       // Use beat library service
-      final results = _beatLibraryService.searchBeats(query);
+      final results = await _beatLibraryService.searchBeats(query).catchError((e) {
+        _errorController.add('Local beat search failed: $e');
+        return <Map<String, dynamic>>[];
+      });
+      
+      _progressController.add(0.5);
       
       // Also search online sources via API service
       final onlineResults = await _apiService.searchBeats(
         query,
         category: category,
         limit: limit ~/ 2,
-      );
+      ).catchError((e) {
+        _errorController.add('Online beat search failed: $e');
+        return <Map<String, dynamic>>[];
+      });
       
       results.addAll(onlineResults);
       
-      _statusController.add('Found ${results.length} beats');
-      return results;
+      // Remove duplicates and limit results
+      final uniqueResults = <Map<String, dynamic>>[];
+      final seenIds = <String>{};
+      
+      for (final result in results) {
+        final id = result['id']?.toString() ?? result['title']?.toString() ?? '';
+        if (id.isNotEmpty && !seenIds.contains(id)) {
+          seenIds.add(id);
+          uniqueResults.add(result);
+          if (uniqueResults.length >= limit) break;
+        }
+      }
+      
+      _progressController.add(1.0);
+      _statusController.add('Found ${uniqueResults.length} beats');
+      return uniqueResults;
     } catch (e) {
       _errorController.add('Beat search failed: $e');
       return [];

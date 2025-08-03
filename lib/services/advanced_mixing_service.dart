@@ -109,15 +109,21 @@ class AdvancedMixingService {
     try {
       _statusController.add('Initializing advanced mixing engine...');
       
-      await _loadMixingPresets();
-      await _initializeAnalysis();
+      await _loadMixingPresets().catchError((e) {
+        _errorController.add('Failed to load mixing presets: $e');
+      });
       
-      _mixingStateController.add(_mixingState);
-      _analysisController.add(_analysisData);
+      await _initializeAnalysis().catchError((e) {
+        _errorController.add('Failed to initialize analysis: $e');
+      });
+      
+      _mixingStateController.add(Map<String, dynamic>.from(_mixingState));
+      _analysisController.add(Map<String, dynamic>.from(_analysisData));
       
       _statusController.add('Advanced mixing engine ready');
     } catch (e) {
       _errorController.add('Failed to initialize mixing engine: $e');
+      rethrow;
     }
   }
 
@@ -337,11 +343,35 @@ class AdvancedMixingService {
     int sampleRate = 44100,
     int bitDepth = 24,
   }) async {
-    if (_isProcessing || kIsWeb) return null;
+    if (_isProcessing) {
+      _errorController.add('Another mixing operation is already in progress');
+      return null;
+    }
+    
+    if (kIsWeb) {
+      _errorController.add('Mix processing is not supported on web platform');
+      return null;
+    }
+    
+    if (tracks.isEmpty) {
+      _errorController.add('No tracks provided for mixing');
+      return null;
+    }
     
     try {
       _isProcessing = true;
       _progressController.add(0.0);
+      _statusController.add('Validating tracks...');
+      
+      // Validate all track files exist
+      for (final track in tracks) {
+        final filePath = track['filePath'] as String?;
+        if (filePath == null || !await File(filePath).exists()) {
+          throw Exception('Track file not found: $filePath');
+        }
+      }
+      
+      _progressController.add(0.1);
       _statusController.add('Processing mix...');
       
       final directory = await getApplicationDocumentsDirectory();
@@ -357,6 +387,7 @@ class AdvancedMixingService {
       final command = await _buildMixCommand(tracks, outputPath, sampleRate, bitDepth);
       
       _progressController.add(0.2);
+      _statusController.add('Applying effects and mixing...');
       
       final session = await FFmpegKit.execute(command);
       final returnCode = await session.getReturnCode();
@@ -364,12 +395,18 @@ class AdvancedMixingService {
       _progressController.add(0.8);
       
       if (ReturnCode.isSuccess(returnCode)) {
-        _progressController.add(1.0);
-        _statusController.add('Mix processed successfully');
-        return outputPath;
+        // Verify output file was created
+        final outputFile = File(outputPath);
+        if (await outputFile.exists() && await outputFile.length() > 0) {
+          _progressController.add(1.0);
+          _statusController.add('Mix processed successfully');
+          return outputPath;
+        } else {
+          throw Exception('Output file was not created or is empty');
+        }
       } else {
-        _errorController.add('Mix processing failed');
-        return null;
+        final logs = await session.getAllLogsAsString();
+        throw Exception('FFmpeg processing failed: $logs');
       }
     } catch (e) {
       _errorController.add('Failed to process mix: $e');
@@ -392,8 +429,8 @@ class AdvancedMixingService {
     // Add input files
     for (int i = 0; i < tracks.length; i++) {
       final track = tracks[i];
-      if (track['stemPath'] != null && !track['isMuted']) {
-        inputs.add('-i "${track['stemPath']}"');
+      if (track['filePath'] != null && !track['isMuted']) {
+        inputs.add('-i "${track['filePath']}"');
         
         // Build track-specific filters
         List<String> trackFilters = [];
@@ -493,47 +530,71 @@ class AdvancedMixingService {
 
   // Audio analysis
   Future<void> _initializeAnalysis() async {
-    _isAnalyzing = true;
-    
-    // Start real-time analysis simulation
-    Timer.periodic(const Duration(milliseconds: 200), (timer) {
-      if (!_isAnalyzing) {
-        timer.cancel();
-        return;
-      }
+    try {
+      _isAnalyzing = true;
       
-      _updateAnalysisData();
-    });
+      // Start real-time analysis simulation
+      Timer.periodic(const Duration(milliseconds: 200), (timer) {
+        if (!_isAnalyzing) {
+          timer.cancel();
+          return;
+        }
+        
+        try {
+          _updateAnalysisData();
+        } catch (e) {
+          _errorController.add('Analysis update failed: $e');
+          timer.cancel();
+          _isAnalyzing = false;
+        }
+      });
+    } catch (e) {
+      _errorController.add('Failed to initialize analysis: $e');
+      _isAnalyzing = false;
+      rethrow;
+    }
   }
 
   void _updateAnalysisData() {
-    final random = Random();
-    
-    // Simulate spectrum analysis
-    for (int i = 0; i < _analysisData['spectrum'].length; i++) {
-      final frequency = i * 22050 / _analysisData['spectrum'].length;
-      final amplitude = _generateSpectrumValue(frequency, random);
-      _analysisData['spectrum'][i] = amplitude;
+    try {
+      final random = Random();
+      
+      // Create a copy to avoid concurrent modification
+      final updatedData = Map<String, dynamic>.from(_analysisData);
+      
+      // Simulate spectrum analysis
+      final spectrum = List<double>.from(updatedData['spectrum'] as List);
+      for (int i = 0; i < spectrum.length; i++) {
+        final frequency = i * 22050 / spectrum.length;
+        final amplitude = _generateSpectrumValue(frequency, random);
+        spectrum[i] = amplitude;
+      }
+      updatedData['spectrum'] = spectrum;
+      
+      // Update other analysis parameters with bounds checking
+      updatedData['peakFrequency'] = (440.0 + random.nextDouble() * 2000).clamp(20.0, 20000.0);
+      updatedData['spectralCentroid'] = (1000.0 + random.nextDouble() * 3000).clamp(100.0, 10000.0);
+      updatedData['spectralRolloff'] = (8000.0 + random.nextDouble() * 4000).clamp(1000.0, 20000.0);
+      updatedData['lufs'] = (-23.0 + random.nextDouble() * 10).clamp(-60.0, 0.0);
+      updatedData['truePeak'] = (-6.0 + random.nextDouble() * 5).clamp(-20.0, 0.0);
+      updatedData['dynamicRange'] = (8.0 + random.nextDouble() * 8).clamp(1.0, 30.0);
+      updatedData['stereoWidth'] = (0.8 + random.nextDouble() * 0.4).clamp(0.0, 2.0);
+      updatedData['phaseCorrelation'] = (0.7 + random.nextDouble() * 0.3).clamp(-1.0, 1.0);
+      
+      // Update tonal balance
+      final tonalBalance = Map<String, dynamic>.from(updatedData['tonalBalance'] as Map<String, dynamic>);
+      tonalBalance['bass'] = (-3.0 + random.nextDouble() * 6).clamp(-12.0, 12.0);
+      tonalBalance['lowMid'] = (-2.0 + random.nextDouble() * 4).clamp(-12.0, 12.0);
+      tonalBalance['highMid'] = (-1.0 + random.nextDouble() * 3).clamp(-12.0, 12.0);
+      tonalBalance['treble'] = (-2.0 + random.nextDouble() * 4).clamp(-12.0, 12.0);
+      updatedData['tonalBalance'] = tonalBalance;
+      
+      // Update the main data and notify listeners
+      _analysisData = updatedData;
+      _analysisController.add(Map<String, dynamic>.from(_analysisData));
+    } catch (e) {
+      _errorController.add('Failed to update analysis data: $e');
     }
-    
-    // Update other analysis parameters
-    _analysisData['peakFrequency'] = 440.0 + random.nextDouble() * 2000;
-    _analysisData['spectralCentroid'] = 1000.0 + random.nextDouble() * 3000;
-    _analysisData['spectralRolloff'] = 8000.0 + random.nextDouble() * 4000;
-    _analysisData['lufs'] = -23.0 + random.nextDouble() * 10;
-    _analysisData['truePeak'] = -6.0 + random.nextDouble() * 5;
-    _analysisData['dynamicRange'] = 8.0 + random.nextDouble() * 8;
-    _analysisData['stereoWidth'] = 0.8 + random.nextDouble() * 0.4;
-    _analysisData['phaseCorrelation'] = 0.7 + random.nextDouble() * 0.3;
-    
-    // Update tonal balance
-    final tonalBalance = _analysisData['tonalBalance'] as Map<String, dynamic>;
-    tonalBalance['bass'] = -3.0 + random.nextDouble() * 6;
-    tonalBalance['lowMid'] = -2.0 + random.nextDouble() * 4;
-    tonalBalance['highMid'] = -1.0 + random.nextDouble() * 3;
-    tonalBalance['treble'] = -2.0 + random.nextDouble() * 4;
-    
-    _analysisController.add(_analysisData);
   }
 
   double _generateSpectrumValue(double frequency, Random random) {

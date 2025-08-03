@@ -1,6 +1,6 @@
 'use strict';
 const MANIFEST = 'flutter-app-manifest';
-const TEMP = 'flutter-temp-cache';
+const TEMP_CACHE = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
 const RESOURCES = {"assets/AssetManifest.bin": "f476448a54c88567298a115f20a11147",
@@ -50,7 +50,7 @@ const CORE = ["main.dart.js",
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   return event.waitUntil(
-    caches.open(TEMP).then((cache) => {
+    caches.open(TEMP_CACHE).then((cache) => {
       return cache.addAll(
         CORE.map((value) => new Request(value, {'cache': 'reload'})));
     })
@@ -63,7 +63,7 @@ self.addEventListener("activate", function(event) {
   return event.waitUntil(async function() {
     try {
       var contentCache = await caches.open(CACHE_NAME);
-      var tempCache = await caches.open(TEMP);
+      var tempCache = await caches.open(TEMP_CACHE);
       var manifestCache = await caches.open(MANIFEST);
       var manifest = await manifestCache.match('manifest');
       // When there is no prior manifest, clear the entire cache.
@@ -74,7 +74,7 @@ self.addEventListener("activate", function(event) {
           var response = await tempCache.match(request);
           await contentCache.put(request, response);
         }
-        await caches.delete(TEMP);
+        await caches.delete(TEMP_CACHE);
         // Save the manifest to make future upgrades efficient.
         await manifestCache.put('manifest', new Response(JSON.stringify(RESOURCES)));
         // Claim client to enable caching on first launch
@@ -101,7 +101,7 @@ self.addEventListener("activate", function(event) {
         var response = await tempCache.match(request);
         await contentCache.put(request, response);
       }
-      await caches.delete(TEMP);
+      await caches.delete(TEMP_CACHE);
       // Save the manifest to make future upgrades efficient.
       await manifestCache.put('manifest', new Response(JSON.stringify(RESOURCES)));
       // Claim client to enable caching on first launch
@@ -111,7 +111,7 @@ self.addEventListener("activate", function(event) {
       // On an unhandled exception the state of the cache cannot be guaranteed.
       console.error('Failed to upgrade service worker: ' + err);
       await caches.delete(CACHE_NAME);
-      await caches.delete(TEMP);
+      await caches.delete(TEMP_CACHE);
       await caches.delete(MANIFEST);
     }
   }());
