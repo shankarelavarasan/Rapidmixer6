@@ -1,0 +1,21 @@
+{
+  "name": "RapidMixer - AI-Powered Audio Mixing Platform",
+  "short_name": "RapidMixer",
+  "description": "Professional AI-powered audio mixing and production platform with stem separation, multi-track editing, and real-time processing",
+  "start_url": "/Rapidmixer6/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#16213e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "flutter.js",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["music", "audio", "productivity"],
+  "lang": "en",
+  "scope": "/Rapidmixer6/"
+}
