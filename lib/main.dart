@@ -4,6 +4,7 @@ import 'package:sizer/sizer.dart';
 
 import 'core/app_export.dart';
 import 'widgets/custom_error_widget.dart';
+import 'services/audio_processing_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +15,15 @@ void main() async {
       errorDetails: details,
     );
   };
+  
+  // Initialize audio processing service and all dependencies
+  try {
+    await AudioProcessingService().initialize();
+    print('✅ Audio processing services initialized successfully');
+  } catch (e) {
+    print('❌ Failed to initialize audio services: $e');
+  }
+  
   // 🚨 CRITICAL: Device orientation lock - DO NOT REMOVE
   Future.wait([
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])

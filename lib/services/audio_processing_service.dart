@@ -9,11 +9,29 @@ import 'package:path_provider/path_provider.dart'
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 
+// Import new service implementations
+import 'real_audio_processing_service.dart';
+import 'beat_library_service.dart';
+import 'professional_export_service.dart';
+import 'multi_track_editor_service.dart';
+import 'advanced_mixing_service.dart';
+import 'cross_platform_service.dart';
+import 'api_integration_service.dart';
+
 class AudioProcessingService {
   static final AudioProcessingService _instance =
       AudioProcessingService._internal();
   factory AudioProcessingService() => _instance;
   AudioProcessingService._internal();
+
+  // Service instances
+  late final RealAudioProcessingService _realAudioService;
+  late final BeatLibraryService _beatLibraryService;
+  late final ProfessionalExportService _exportService;
+  late final MultiTrackEditorService _multiTrackService;
+  late final AdvancedMixingService _mixingService;
+  late final CrossPlatformService _platformService;
+  late final ApiIntegrationService _apiService;
 
   // Stream controllers for processing updates
   final StreamController<double> _progressController =
@@ -31,8 +49,41 @@ class AudioProcessingService {
   bool _isProcessing = false;
   bool get isProcessing => _isProcessing;
 
-  // Real AI-powered stem separation using multiple free services
-  Future<Map<String, String>> separateStems(String inputFilePath) async {
+  // Initialize the audio processing service
+  Future<void> initialize() async {
+    try {
+      _statusController.add('Initializing comprehensive audio processing service...');
+      
+      // Initialize all services
+      _realAudioService = RealAudioProcessingService();
+      _beatLibraryService = BeatLibraryService();
+      _exportService = ProfessionalExportService();
+      _multiTrackService = MultiTrackEditorService();
+      _mixingService = AdvancedMixingService();
+      _platformService = CrossPlatformService();
+      _apiService = ApiIntegrationService();
+      
+      // Initialize services in order
+      await _platformService.initialize();
+      await _apiService.initialize();
+      await _realAudioService.initialize();
+      await _beatLibraryService.initialize();
+      await _exportService.initialize();
+      await _multiTrackService.initialize();
+      await _mixingService.initialize();
+      
+      _statusController.add('Comprehensive audio processing service ready');
+    } catch (e) {
+      _errorController.add('Failed to initialize audio service: $e');
+    }
+  }
+
+  // AI-powered stem separation with real functionality
+  Future<Map<String, String>> separateStems(String inputFilePath, {
+    int stemCount = 4,
+    String quality = 'high',
+    String preferredApi = 'auto',
+  }) async {
     if (kIsWeb) {
       return _separateStemsWeb(inputFilePath);
     } else {
@@ -46,20 +97,25 @@ class AudioProcessingService {
     _statusController.add('Initializing AI stem separation...');
 
     try {
-      // First try Spleeter API
-      var result = await _trySpleeterAPI(inputFilePath);
-      if (result.isNotEmpty) return result;
-
-      // Fallback to Voice.ai API
-      result = await _tryVoiceAIAPI(inputFilePath);
-      if (result.isNotEmpty) return result;
-
-      // Fallback to Soundverse API
-      result = await _trySoundverseAPI(inputFilePath);
-      if (result.isNotEmpty) return result;
-
-      // Final fallback to local FFmpeg processing
-      return await _mockStemSeparationMobile(inputFilePath);
+      // Try real API integration first
+      final apiResult = await _apiService.separateStems(
+        inputFilePath,
+        preferredApi: 'auto',
+        stemCount: 4,
+      );
+      
+      if (apiResult != null && apiResult.isNotEmpty) {
+        _statusController.add('Stem separation completed via API');
+        return apiResult;
+      }
+      
+      // Fallback to real audio processing service
+      _statusController.add('Using local processing for stem separation...');
+      return await _realAudioService.separateStems(
+        inputFilePath,
+        stemCount: 4,
+        quality: 'high',
+      );
     } catch (e) {
       _errorController.add('All stem separation services failed: $e');
       return await _mockStemSeparationMobile(inputFilePath);
@@ -118,229 +174,141 @@ class AudioProcessingService {
     return mockStems;
   }
 
-  // Spleeter API integration (free service)
-  Future<Map<String, String>> _trySpleeterAPI(String inputFilePath) async {
+  // Enhanced beat library with real functionality
+  Future<List<Map<String, dynamic>>> searchBeats(String query, {
+    String category = 'all',
+    int limit = 20,
+  }) async {
     try {
-      _statusController.add('Connecting to Spleeter AI service...');
-      final dio = Dio();
+      _statusController.add('Searching beat library...');
       
-      // Upload file to free Spleeter service
-      final formData = FormData.fromMap({
-        'audio': await MultipartFile.fromFile(inputFilePath),
-        'stems': '5', // vocals, drums, bass, piano, other
-      });
+      // Use beat library service
+      final results = await _beatLibraryService.searchBeats(
+        query,
+        category: category,
+        limit: limit,
+      );
       
-      _statusController.add('Uploading audio for AI processing...');
-      _progressController.add(0.2);
+      // Also search online sources via API service
+      final onlineResults = await _apiService.searchBeats(
+        query,
+        category: category,
+        limit: limit ~/ 2,
+      );
       
-      // Try multiple free Spleeter endpoints
-      final endpoints = [
-        'https://api.lalal.ai/v1/split',
-        'https://www.remove-vocals.com/api/separate',
-        'https://vocalremover.org/api/split'
-      ];
+      results.addAll(onlineResults);
       
-      for (String endpoint in endpoints) {
-        try {
-          final response = await dio.post(
-            endpoint,
-            data: formData,
-            options: Options(
-              headers: {'Content-Type': 'multipart/form-data'},
-              receiveTimeout: const Duration(minutes: 5),
-            ),
-          );
-          
-          if (response.statusCode == 200) {
-            _statusController.add('AI processing completed!');
-            _progressController.add(1.0);
-            
-            final data = response.data;
-            return {
-              'vocals': data['vocals'] ?? '',
-              'drums': data['drums'] ?? '',
-              'bass': data['bass'] ?? '',
-              'piano': data['piano'] ?? '',
-              'other': data['other'] ?? '',
-            };
-          }
-        } catch (e) {
-          print('Endpoint $endpoint failed: $e');
-          continue;
-        }
-      }
-      
-      return {};
+      _statusController.add('Found ${results.length} beats');
+      return results;
     } catch (e) {
-      _errorController.add('Spleeter API failed: $e');
-      return {};
+      _errorController.add('Beat search failed: $e');
+      return [];
     }
   }
 
-  // Voice.ai API integration
-  Future<Map<String, String>> _tryVoiceAIAPI(String inputFilePath) async {
+  // Generate beats with AI
+  Future<String?> generateBeat({
+    required String style,
+    required int bpm,
+    required double duration,
+    String? description,
+  }) async {
     try {
-      _statusController.add('Connecting to Voice.ai service...');
-      final dio = Dio();
+      _statusController.add('Generating AI beat...');
       
-      final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(inputFilePath),
-        'type': 'stem_separation',
-      });
-      
-      _statusController.add('Processing with Voice.ai...');
-      _progressController.add(0.4);
-      
-      final response = await dio.post(
-        'https://api.voice.ai/v1/separate',
-        data: formData,
-        options: Options(
-          headers: {'Content-Type': 'multipart/form-data'},
-          receiveTimeout: const Duration(minutes: 5),
-        ),
+      // Try API generation first
+      final apiResult = await _apiService.generateBeat(
+        style: style,
+        bpm: bpm,
+        duration: duration,
+        description: description,
       );
       
-      if (response.statusCode == 200) {
-        _statusController.add('Voice.ai processing completed!');
-        _progressController.add(1.0);
-        
-        final data = response.data;
-        return {
-          'vocals': data['stems']['vocals'] ?? '',
-          'drums': data['stems']['drums'] ?? '',
-          'bass': data['stems']['bass'] ?? '',
-          'piano': data['stems']['piano'] ?? '',
-          'other': data['stems']['other'] ?? '',
-        };
+      if (apiResult != null) {
+        _statusController.add('Beat generated via API');
+        return apiResult;
       }
       
-      return {};
+      // Fallback to local generation
+      return await _beatLibraryService.generateBeat(
+        style: style,
+        bpm: bpm,
+        duration: duration,
+        description: description,
+      );
     } catch (e) {
-      _errorController.add('Voice.ai API failed: $e');
-      return {};
+      _errorController.add('Beat generation failed: $e');
+      return null;
     }
   }
 
-  // Soundverse API integration
-  Future<Map<String, String>> _trySoundverseAPI(String inputFilePath) async {
+  // Professional export with multiple formats
+  Future<String?> exportAudio({
+    required List<Map<String, dynamic>> tracks,
+    required String outputFormat,
+    required String quality,
+    Map<String, dynamic>? metadata,
+    Map<String, dynamic>? masterEffects,
+  }) async {
     try {
-      _statusController.add('Connecting to Soundverse AI...');
-      final dio = Dio();
+      _statusController.add('Starting professional export...');
       
-      final formData = FormData.fromMap({
-        'audio_file': await MultipartFile.fromFile(inputFilePath),
-        'separation_type': 'full_stems',
-      });
-      
-      _statusController.add('Processing with Soundverse AI...');
-      _progressController.add(0.6);
-      
-      final response = await dio.post(
-        'https://api.soundverse.ai/v1/stem-separation',
-        data: formData,
-        options: Options(
-          headers: {'Content-Type': 'multipart/form-data'},
-          receiveTimeout: const Duration(minutes: 5),
-        ),
+      return await _exportService.exportAudio(
+        tracks: tracks,
+        outputFormat: outputFormat,
+        quality: quality,
+        metadata: metadata,
+        masterEffects: masterEffects,
       );
-      
-      if (response.statusCode == 200) {
-        _statusController.add('Soundverse processing completed!');
-        _progressController.add(1.0);
-        
-        final data = response.data;
-        return {
-          'vocals': data['separated_stems']['vocals'] ?? '',
-          'drums': data['separated_stems']['drums'] ?? '',
-          'bass': data['separated_stems']['bass'] ?? '',
-          'piano': data['separated_stems']['piano'] ?? '',
-          'other': data['separated_stems']['other'] ?? '',
-        };
-      }
-      
-      return {};
     } catch (e) {
-      _errorController.add('Soundverse API failed: $e');
-      return {};
+      _errorController.add('Export failed: $e');
+      return null;
     }
   }
 
-  // Web-based Spleeter API
-  Future<Map<String, String>> _tryWebSpleeterAPI(String inputUrl) async {
-    try {
-      _statusController.add('Processing with web Spleeter...');
-      final dio = Dio();
-      
-      final response = await dio.post(
-        'https://api.splitter.ai/v1/separate',
-        data: {
-          'url': inputUrl,
-          'stems': 5,
-        },
-        options: Options(
-          headers: {'Content-Type': 'application/json'},
-          receiveTimeout: const Duration(minutes: 5),
-        ),
-      );
-      
-      if (response.statusCode == 200) {
-        _statusController.add('Web separation completed!');
-        _progressController.add(1.0);
-        
-        final data = response.data;
-        return {
-          'vocals': data['stems']['vocals'] ?? '',
-          'drums': data['stems']['drums'] ?? '',
-          'bass': data['stems']['bass'] ?? '',
-          'piano': data['stems']['piano'] ?? '',
-          'other': data['stems']['other'] ?? '',
-        };
-      }
-      
-      return {};
-    } catch (e) {
-      _errorController.add('Web Spleeter failed: $e');
-      return {};
-    }
+  // Multi-track editing functionality
+  Future<String> addTrack({
+    required String name,
+    String type = 'audio',
+    String? stemPath,
+    Map<String, dynamic>? initialSettings,
+  }) async {
+    return await _multiTrackService.addTrack(
+      name: name,
+      type: type,
+      stemPath: stemPath,
+      initialSettings: initialSettings,
+    );
+  }
+  
+  Future<void> updateTrack(String trackId, Map<String, dynamic> updates) async {
+    await _multiTrackService.updateTrack(trackId, updates);
+  }
+  
+  Future<void> removeTrack(String trackId) async {
+    await _multiTrackService.removeTrack(trackId);
   }
 
-  // Voice.ai web API
-  Future<Map<String, String>> _tryVoiceAIWebAPI(String inputUrl) async {
-    try {
-      _statusController.add('Processing with Voice.ai web...');
-      final dio = Dio();
-      
-      final response = await dio.post(
-        'https://api.voice.ai/v1/web-separate',
-        data: {
-          'audio_url': inputUrl,
-          'format': 'stems',
-        },
-        options: Options(
-          headers: {'Content-Type': 'application/json'},
-          receiveTimeout: const Duration(minutes: 5),
-        ),
-      );
-      
-      if (response.statusCode == 200) {
-        _statusController.add('Voice.ai web processing completed!');
-        _progressController.add(1.0);
-        
-        final data = response.data;
-        return {
-          'vocals': data['results']['vocals'] ?? '',
-          'drums': data['results']['drums'] ?? '',
-          'bass': data['results']['bass'] ?? '',
-          'piano': data['results']['piano'] ?? '',
-          'other': data['results']['other'] ?? '',
-        };
-      }
-      
-      return {};
-    } catch (e) {
-      _errorController.add('Voice.ai web API failed: $e');
-      return {};
-    }
+  // Advanced mixing functionality
+  Future<void> applyMixingPreset(String presetId) async {
+    await _mixingService.applyPreset(presetId);
+  }
+  
+  Future<void> updateMixingParameter(String category, String parameter, dynamic value) async {
+    await _mixingService.updateMixingParameter(category, parameter, value);
+  }
+  
+  Future<String?> processMix(List<Map<String, dynamic>> tracks, {
+    String outputFormat = 'wav',
+    int sampleRate = 44100,
+    int bitDepth = 24,
+  }) async {
+    return await _mixingService.processMix(
+      tracks,
+      outputFormat: outputFormat,
+      sampleRate: sampleRate,
+      bitDepth: bitDepth,
+    );
   }
 
   Future<Map<String, String>> _mockStemSeparationMobile(
@@ -583,6 +551,40 @@ class AudioProcessingService {
         return 'volume=1.0';
     }
   }
+
+  // Cross-platform functionality
+  Future<bool> requestPermissions() async {
+    return await _platformService.requestPermissions();
+  }
+  
+  Future<String?> pickAudioFile() async {
+    return await _platformService.pickAudioFile();
+  }
+  
+  Future<bool> shareFile(String filePath, {String? text}) async {
+    return await _platformService.shareFile(filePath, text: text);
+  }
+  
+  Map<String, dynamic> getOptimalSettings() {
+    return _platformService.getOptimalSettings();
+  }
+
+  // API integration functionality
+  Future<void> setApiKey(String apiName, String apiKey) async {
+    await _apiService.setApiKey(apiName, apiKey);
+  }
+  
+  List<String> get availableStemApis => _apiService.availableStemApis;
+  List<String> get availableBeatApis => _apiService.availableBeatApis;
+  
+  // Service getters for direct access
+  RealAudioProcessingService get realAudioService => _realAudioService;
+  BeatLibraryService get beatLibraryService => _beatLibraryService;
+  ProfessionalExportService get exportService => _exportService;
+  MultiTrackEditorService get multiTrackService => _multiTrackService;
+  AdvancedMixingService get mixingService => _mixingService;
+  CrossPlatformService get platformService => _platformService;
+  ApiIntegrationService get apiService => _apiService;
 
   void dispose() {
     _progressController.close();

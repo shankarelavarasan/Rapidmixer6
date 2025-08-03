@@ -1,58 +1,112 @@
-# RapidMixer - AI-Powered Music Production App
+# Rapid Mixer 6 - Professional Audio Production Suite
 
-## Overview
-RapidMixer is a comprehensive Flutter-based music production application that allows users to upload songs, separate them into individual instrument tracks using AI, and create professional mixes with advanced audio controls.
+A comprehensive, AI-powered audio mixing and production application built with Flutter, featuring advanced stem separation, professional multi-track editing, and cross-platform compatibility.
 
-## Features
+## 🚀 Key Features
 
 ### 🎵 AI-Powered Stem Separation
-- **Multiple AI Services**: Integrates with Spleeter, Voice.ai, and Soundverse APIs
-- **Instrument Separation**: Automatically separates uploaded songs into:
-  - Vocals, Drums, Bass, Piano/Keyboard, Guitar, Violin, Flute, Other instruments
-- **Fallback Processing**: Uses FFmpeg for local processing when APIs are unavailable
+- **Multiple AI Services**: Integrates with Replicate (Spleeter), LALAL.AI, Voice.ai, and Soundverse APIs
+- **Intelligent Fallbacks**: Automatically tries multiple services for best results
+- **Advanced Separation**: 2, 4, or 5-stem separation (vocals, drums, bass, piano, other)
+- **Local Processing**: FFmpeg-based fallback when APIs are unavailable
+- **Real-time Progress**: Live updates with detailed processing status
+- **High-Quality Output**: Maintains audio fidelity during separation
 
-### 🎛️ Advanced Multi-Track Editor
-- **Individual Track Controls**: Volume, Pitch, Speed, Pan, Mute/Solo functionality
-- **Professional Audio Effects**: Reverb, Echo/Delay, 3-Band Equalizer
-- **Master Effects**: Apply effects to the entire mix
-- **Real-time Processing**: All effects applied in real-time
+### 🎛️ Professional Multi-Track Editor
+- **Unlimited Tracks**: Add and manage multiple audio tracks
+- **Real-time Effects**: EQ, compressor, gate, reverb, echo, pitch, speed
+- **Advanced Controls**: Volume, pan, solo, mute per track
+- **Waveform Visualization**: Visual representation with zoom and scroll
+- **Timeline Management**: Precise editing with playhead control
+- **Recording Capability**: Record directly into tracks
+- **Automation Support**: Parameter automation and playback
+- **Project Management**: Save and load complete projects
 
-### 🎼 Comprehensive Beat Library
-- **Multiple Genres**: Hip Hop, Electronic, Rock, Jazz, Classical, Pop, Reggae, Country, R&B
-- **Beat Features**: BPM information, Duration display, Waveform visualization, Preview playback
-- **Organization**: Browse, Favorites, and Recent tabs with search and filter functionality
+### 🥁 Comprehensive Beat Library
+- **Online Integration**: Fetches beats from Free Music Archive, Zapsplat, BBC Sound Effects
+- **Procedural Generation**: AI-powered beat creation with custom parameters
+- **Smart Search**: Filter by BPM, genre, mood, duration, and keywords
+- **Favorites System**: Save and organize preferred beats
+- **Offline Support**: Download beats for offline use
+- **Preview Playback**: Listen before adding to projects
+- **Seamless Integration**: Direct import into multi-track editor
 
-### 🎯 Advanced Mixing Features
-- **Tempo Control**: Adjust overall project tempo
-- **Metronome**: Built-in metronome for timing
-- **Loop Mode**: Set loop points for continuous playback
-- **Timeline Navigation**: Precise playhead control
-- **Auto-save**: Automatic project saving
+### 🎚️ Advanced Mixing Features
+- **Master Controls**: Global volume, pan, EQ, compressor, limiter
+- **Professional Effects**: Reverb, delay, stereo imaging
+- **Spectral Analysis**: Real-time frequency analysis
+- **Auto-Mixing**: AI-powered auto-balance, auto-compress, auto-limit
+- **Mix Templates**: Save and load mixing presets
+- **Real-time Processing**: Low-latency audio processing
 
-### 📤 Professional Export Options
-- **Multiple Formats**: MP3, WAV, FLAC, AAC with various quality settings
-- **Metadata Support**: Add title, artist, album information
-- **Time Range Export**: Export specific sections
-- **Watermark Option**: Add app branding
-- **Advanced Processing**: Applies all track effects and master processing
+### 💾 Professional Export
+- **Multiple Formats**: MP3, WAV, FLAC, AAC, OGG support
+- **Quality Control**: Custom bitrate, sample rate, bit depth
+- **Metadata Support**: Artist, title, album, artwork
+- **Master Effects**: Apply final processing during export
+- **Normalization**: Audio level optimization
+- **Watermarking**: Optional audio watermarks
+- **Batch Processing**: Export multiple versions simultaneously
 
-### 📱 Cross-Platform Support
-- **Web**: Full functionality in web browsers
-- **Mobile**: Native Android and iOS support
-- **Responsive Design**: Adapts to different screen sizes
+### 🌐 Cross-Platform Compatibility
+- **Universal Support**: Web, iOS, Android, Windows, macOS, Linux
+- **Platform Detection**: Automatic capability detection
+- **Permission Management**: Seamless permission handling
+- **File Operations**: Platform-specific file picking and sharing
+- **Performance Optimization**: Platform-optimized processing
+- **Responsive Design**: Adapts to any screen size
 
-## Technical Architecture
+## 🏗️ Technical Architecture
 
 ### Core Services
-- **AudioProcessingService**: AI-powered stem separation with multiple API integrations
-- **AudioService**: Multi-track playback and recording management
-- **ExportService**: Advanced mixing and export with professional audio processing
 
-### API Integrations
-- **Spleeter API**: Deezer's open-source separation technology
-- **Voice.ai API**: Advanced AI-powered separation
-- **Soundverse API**: Professional-grade separation
-- **FFmpeg Fallback**: Local processing when APIs are unavailable
+#### AudioProcessingService
+- Unified interface for all audio operations
+- Integrates all specialized services
+- Manages service initialization and coordination
+
+#### RealAudioProcessingService
+- AI-powered stem separation with multiple API integrations
+- Local FFmpeg processing fallback
+- Enhanced mock separation with realistic processing
+
+#### BeatLibraryService
+- Online beat fetching from multiple sources
+- Procedural beat generation using Web Audio API/FFmpeg
+- Caching and offline support
+
+#### MultiTrackEditorService
+- Track management and mixing
+- Real-time effects processing
+- Recording and playback controls
+
+#### AdvancedMixingService
+- Professional mixing algorithms
+- Spectral analysis and auto-mixing
+- Master effects and processing
+
+#### ProfessionalExportService
+- Multi-format audio export
+- Quality control and metadata
+- Master effects application
+
+#### CrossPlatformService
+- Platform detection and capabilities
+- Permission and file management
+- Performance monitoring
+
+#### ApiIntegrationService
+- External API management
+- Rate limiting and error handling
+- API key configuration
+
+### AI Integration
+- **Replicate API**: Spleeter model integration
+- **LALAL.AI**: Professional stem separation
+- **Voice.ai**: Advanced vocal processing
+- **Soundverse API**: AI audio analysis
+- **Freesound API**: Beat and sample search
+- **MusicGen**: AI beat generation
 
 ## 📋 Prerequisites
 
