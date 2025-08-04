@@ -691,11 +691,11 @@ class MultiTrackEditorService {
       0xFF00D4FF, 0xFFFF4757, 0xFF00C896, 0xFFFFB800,
       0xFF9C88FF, 0xFFFF6B6B, 0xFF4ECDC4, 0xFFFFE66D,
     ];
-    return colors[math.Random().nextInt(colors.length)];
+    return colors[Random().nextInt(colors.length)];
   }
 
   List<double> _generateWaveform() {
-    final random = math.Random();
+    final random = Random();
     return List.generate(100, (index) => random.nextDouble());
   }
 

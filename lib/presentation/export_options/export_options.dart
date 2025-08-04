@@ -7,6 +7,7 @@ import './widgets/export_format_selector.dart';
 import './widgets/export_progress_dialog.dart';
 import './widgets/export_range_selector.dart';
 import './widgets/metadata_editor.dart';
+import '../../services/export_service.dart';
 import './widgets/share_destination_options.dart';
 import './widgets/watermark_settings.dart';
 
@@ -617,5 +618,164 @@ class _ExportOptionsState extends State<ExportOptions> {
         content: Text(message),
         backgroundColor: AppTheme.errorColor,
         behavior: SnackBarBehavior.floating));
+  }
+}
+
+class ExportOptionsScreen extends StatefulWidget {
+  final Map<String, dynamic> stems;
+  final Map<String, double> volumes;
+  final Map<String, bool> muted;
+
+  const ExportOptionsScreen({
+    Key? key,
+    required this.stems,
+    required this.volumes,
+    required this.muted,
+  }) : super(key: key);
+
+  @override
+  State<ExportOptionsScreen> createState() => _ExportOptionsScreenState();
+}
+
+class _ExportOptionsScreenState extends State<ExportOptionsScreen> {
+  final ExportService _exportService = ExportService();
+  
+  String _selectedFormat = 'mp3';
+  String _selectedQuality = 'high';
+  bool _isExporting = false;
+
+  final List<String> _formats = ['mp3', 'wav', 'flac'];
+  final List<String> _qualities = ['low', 'medium', 'high'];
+
+  Future<void> _exportMix() async {
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final exportedPath = await _exportService.exportMix(
+        stems: widget.stems,
+        volumes: widget.volumes,
+        muted: widget.muted,
+        format: _selectedFormat,
+        quality: _selectedQuality,
+      );
+
+      if (exportedPath != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Mix exported successfully to: $exportedPath'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() {
+        _isExporting = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Export Options'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Export Format',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _selectedFormat,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+              ),
+              items: _formats.map((format) {
+                return DropdownMenuItem(
+                  value: format,
+                  child: Text(format.toUpperCase()),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedFormat = value!;
+                });
+              },
+            ),
+            
+            const SizedBox(height: 24),
+            
+            const Text(
+              'Quality',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              value: _selectedQuality,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+              ),
+              items: _qualities.map((quality) {
+                return DropdownMenuItem(
+                  value: quality,
+                  child: Text(quality.toUpperCase()),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedQuality = value!;
+                });
+              },
+            ),
+            
+            const SizedBox(height: 32),
+            
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isExporting ? null : _exportMix,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isExporting
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Exporting...'),
+                        ],
+                      )
+                    : const Text(
+                        'Export Mix',
+                        style: TextStyle(fontSize: 16),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

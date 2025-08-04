@@ -54,4 +54,13 @@ flutter:
     - assets/
     - assets/images/
   
-  # No local fonts needed - using Google Fonts package for all typography
+  # Font configuration for web compatibility
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: packages/flutter/fonts/Roboto-Regular.ttf
+        - asset: packages/flutter/fonts/Roboto-Bold.ttf
+          weight: 700
+    - family: MaterialIcons
+      fonts:
+        - asset: packages/flutter/fonts/MaterialIcons-Regular.otf

@@ -17,6 +17,7 @@ import 'multi_track_editor_service.dart';
 import 'advanced_mixing_service.dart';
 import 'cross_platform_service.dart';
 import 'api_integration_service.dart';
+import 'package:http/http.dart' as http;
 
 class AudioProcessingService {
   static final AudioProcessingService _instance =
@@ -807,5 +808,100 @@ class AudioProcessingService {
     _progressController.close();
     _statusController.close();
     _errorController.close();
+  }
+}
+
+  // Backend URL for stem separation
+  final String _backendUrl = "https://rapid-mixer-2-0-1.onrender.com/process-audio";
+
+  // Stream controllers for processing updates
+  final StreamController<double> _progressController = StreamController<double>.broadcast();
+  final StreamController<String> _statusController = StreamController<String>.broadcast();
+  final StreamController<String> _errorController = StreamController<String>.broadcast();
+
+  // Getters for streams
+  Stream<double> get progressStream => _progressController.stream;
+  Stream<String> get statusStream => _statusController.stream;
+  Stream<String> get errorStream => _errorController.stream;
+
+  bool _isProcessing = false;
+  bool get isProcessing => _isProcessing;
+
+  // Main method to separate stems using the backend
+  Future<Map<String, dynamic>> separateStems(File audioFile) async {
+    if (_isProcessing) {
+      throw Exception('Another processing operation is already in progress');
+    }
+
+    _isProcessing = true;
+    _statusController.add('Uploading audio file to server...');
+    _progressController.add(0.1);
+
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse(_backendUrl));
+      request.files.add(await http.MultipartFile.fromPath(
+        'file',
+        audioFile.path,
+      ));
+
+      _statusController.add('Processing audio with TRAE AI...');
+      _progressController.add(0.3);
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        _statusController.add('Receiving processed stems...');
+        _progressController.add(0.8);
+        
+        final responseBody = await response.stream.bytesToString();
+        final result = json.decode(responseBody);
+        
+        _statusController.add('Stem separation completed!');
+        _progressController.add(1.0);
+        
+        return result;
+      } else {
+        throw Exception('Failed to process audio. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      _errorController.add('Error processing audio: $e');
+      throw Exception('Error connecting to the server: $e');
+    } finally {
+      _isProcessing = false;
+    }
+  }
+
+  void dispose() {
+    _progressController.close();
+    _statusController.close();
+    _errorController.close();
+  }
+}
+
+  // The URL of YOUR backend server that you deployed in Phase 1
+  final String yourBackendUrl = "https://your-rapid-mixer-backend.onrender.com/process-audio";
+
+  // This function takes the user's audio file and sends it to your backend
+  Future<Map<String, dynamic>> separateStems(File audioFile) async {
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse(yourBackendUrl));
+      request.files.add(await http.MultipartFile.fromPath(
+        'file',
+        audioFile.path,
+      ));
+
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        // Success! The backend will return the URLs for the stems from TRAE
+        final responseBody = await response.stream.bytesToString();
+        return json.decode(responseBody); // This should contain URLs to vocals, bass, etc.
+      } else {
+        // Handle errors
+        throw Exception('Failed to process audio. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error connecting to the server: $e');
+    }
   }
 }

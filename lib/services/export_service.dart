@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart'
     if (dart.library.io) 'path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter/return_code.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 class ExportService {
   static final ExportService _instance = ExportService._internal();
@@ -424,5 +426,68 @@ class ExportService {
     _progressController.close();
     _statusController.close();
     _errorController.close();
+  }
+}
+
+
+class ExportService {
+  static final ExportService _instance = ExportService._internal();
+  factory ExportService() => _instance;
+  ExportService._internal();
+
+  // Your backend URL for mixing/export
+  final String _backendUrl = "https://rapid-mixer-2-0-1.onrender.com/mix-stems";
+
+  Future<String?> exportMix({
+    required Map<String, dynamic> stems,
+    required Map<String, double> volumes,
+    required Map<String, bool> muted,
+    required String format,
+    required String quality,
+  }) async {
+    try {
+      // Prepare the mix data
+      final mixData = {
+        'stems': stems,
+        'volumes': volumes,
+        'muted': muted,
+        'format': format,
+        'quality': quality,
+      };
+
+      // Send to backend for mixing
+      final response = await http.post(
+        Uri.parse(_backendUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(mixData),
+      );
+
+      if (response.statusCode == 200) {
+        final result = json.decode(response.body);
+        final mixedAudioUrl = result['mixed_audio_url'];
+        
+        // Download the mixed audio file
+        return await _downloadFile(mixedAudioUrl, format);
+      } else {
+        throw Exception('Failed to export mix. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Export failed: $e');
+    }
+  }
+
+  Future<String> _downloadFile(String url, String format) async {
+    final response = await http.get(Uri.parse(url));
+    
+    if (response.statusCode == 200) {
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = 'rapid_mixer_export_${DateTime.now().millisecondsSinceEpoch}.$format';
+      final file = File('${directory.path}/$fileName');
+      
+      await file.writeAsBytes(response.bodyBytes);
+      return file.path;
+    } else {
+      throw Exception('Failed to download exported file');
+    }
   }
 }
