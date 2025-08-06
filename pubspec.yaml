@@ -44,6 +44,15 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  # Remove the custom fonts section since google_fonts package handles this automatically
+  # fonts:
+  #   - family: Noto Sans
+  #     fonts:
+  #       - asset: https://fonts.gstatic.com/s/notosans/v36/o-0IIpQlx3QUlC5A4PNr5TRASf6M7Q.ttf
+  #   - family: Noto Color Emoji
+  #     fonts:
+  #       - asset: https://fonts.gstatic.com/s/notocoloremoji/v25/Yq6P-KqIXTD0t4D9z1ESnKM3-HpFab5s79iz64w.ttf
+
   assets:
     - assets/
     - assets/images/

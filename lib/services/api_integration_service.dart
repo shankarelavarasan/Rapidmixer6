@@ -11,6 +11,9 @@ class ApiIntegrationService {
   factory ApiIntegrationService() => _instance;
   ApiIntegrationService._internal();
 
+  // Update this URL to your new Render backend
+  static const String _backendUrl = 'https://rapid-mixer-backend.onrender.com';
+
   final StreamController<Map<String, dynamic>> _apiStatusController = 
       StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<double> _progressController = StreamController<double>.broadcast();
@@ -21,6 +24,135 @@ class ApiIntegrationService {
   Stream<double> get progressStream => _progressController.stream;
   Stream<String> get statusStream => _statusController.stream;
   Stream<String> get errorStream => _errorController.stream;
+
+  // Test backend connection
+  Future<bool> testBackendConnection() async {
+    try {
+      _statusController.add('Testing backend connection...');
+      
+      final response = await http.get(
+        Uri.parse('$_backendUrl/api/health'),
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _statusController.add('Backend connected successfully!');
+        return data['status'] == 'healthy';
+      }
+      
+      _errorController.add('Backend health check failed: ${response.statusCode}');
+      return false;
+    } catch (e) {
+      _errorController.add('Backend connection failed: $e');
+      return false;
+    }
+  }
+
+  // Process audio file
+  Future<Map<String, dynamic>> processAudio(String filePath) async {
+    try {
+      _statusController.add('Uploading audio file...');
+      _progressController.add(0.1);
+      
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_backendUrl/api/process-audio'),
+      );
+      
+      request.files.add(
+        await http.MultipartFile.fromPath('audio_file', filePath),
+      );
+      
+      _progressController.add(0.3);
+      _statusController.add('Processing audio...');
+      
+      var streamedResponse = await request.send().timeout(Duration(minutes: 5));
+      var response = await http.Response.fromStream(streamedResponse);
+      
+      _progressController.add(0.8);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _progressController.add(1.0);
+        _statusController.add('Audio processed successfully!');
+        return data;
+      } else {
+        throw Exception('Processing failed: ${response.body}');
+      }
+    } catch (e) {
+      _errorController.add('Audio processing failed: $e');
+      _progressController.add(0.0);
+      rethrow;
+    }
+  }
+
+  // AI Stem Separation
+  Future<Map<String, dynamic>> stemSeparation(String filePath) async {
+    try {
+      _statusController.add('Starting AI stem separation...');
+      _progressController.add(0.1);
+      
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_backendUrl/api/stem-separation'),
+      );
+      
+      request.files.add(
+        await http.MultipartFile.fromPath('audio_file', filePath),
+      );
+      
+      _progressController.add(0.2);
+      _statusController.add('AI is separating stems...');
+      
+      var streamedResponse = await request.send().timeout(Duration(minutes: 10));
+      var response = await http.Response.fromStream(streamedResponse);
+      
+      _progressController.add(0.9);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _progressController.add(1.0);
+        _statusController.add('Stem separation completed!');
+        return data;
+      } else {
+        throw Exception('Stem separation failed: ${response.body}');
+      }
+    } catch (e) {
+      _errorController.add('Stem separation failed: $e');
+      _progressController.add(0.0);
+      rethrow;
+    }
+  }
+
+  // Generate beats with AI
+  Future<Map<String, dynamic>> generateBeats(Map<String, dynamic> params) async {
+    try {
+      _statusController.add('Generating AI beats...');
+      _progressController.add(0.1);
+      
+      final response = await http.post(
+        Uri.parse('$_backendUrl/api/generate-beats'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(params),
+      ).timeout(Duration(minutes: 3));
+      
+      _progressController.add(0.8);
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        _progressController.add(1.0);
+        _statusController.add('Beats generated successfully!');
+        return data;
+      } else {
+        throw Exception('Beat generation failed: ${response.body}');
+      }
+    } catch (e) {
+      _errorController.add('Beat generation failed: $e');
+      _progressController.add(0.0);
+      rethrow;
+    }
+  }
 
   // API Configuration
   final Map<String, Map<String, dynamic>> _apiConfigs = {
@@ -774,3 +906,4 @@ class ApiIntegrationService {
     _errorController.close();
   }
 }
+

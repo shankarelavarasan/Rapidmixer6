@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'services/api_integration_service.dart';
+import 'routes/app_routes.dart'; // Add this line
 
 void main() {
   runApp(MyApp());
@@ -33,6 +35,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       debugShowCheckedModeBanner: false,
+      routes: AppRoutes.routes, // Add this line
       home: RapidMixerHomePage(),
     );
   }
@@ -167,6 +170,16 @@ class RapidMixerHomePage extends StatelessWidget {
                                   () => Navigator.pushNamed(context, '/track-editor'),
                                 ),
                               ),
+                              const SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: _buildActionButton(
+                                  'Test Backend',
+                                  Icons.cloud,
+                                  Colors.orange,
+                                  () => _testBackend(context),
+                                ),
+                              ),
                             ],
                           );
                         }
@@ -184,6 +197,12 @@ class RapidMixerHomePage extends StatelessWidget {
                               Icons.play_arrow,
                               Colors.green,
                               () => Navigator.pushNamed(context, '/track-editor'),
+                            ),
+                            _buildActionButton(
+                              'Test Backend',
+                              Icons.cloud,
+                              Colors.orange,
+                              () => _testBackend(context),
                             ),
                           ],
                         );
@@ -360,4 +379,37 @@ class RapidMixerHomePage extends StatelessWidget {
       ),
     );
   }
+  
+  // Move _testBackend function inside the class and add context parameter
+  Future<void> _testBackend(BuildContext context) async {
+    final apiService = ApiIntegrationService();
+    
+    try {
+      final isConnected = await apiService.testBackendConnection();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isConnected 
+              ? '✅ Backend connected successfully!' 
+              : '❌ Backend connection failed'
+          ),
+          backgroundColor: isConnected ? Colors.green : Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Connection error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 }
+
+// REMOVE THESE LINES - THEY'RE CAUSING THE ERROR:
+// ElevatedButton(
+//   onPressed: _testBackend,
+//   child: Text('Test Backend'),
+// ),

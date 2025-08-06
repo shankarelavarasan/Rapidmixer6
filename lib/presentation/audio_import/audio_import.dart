@@ -57,7 +57,8 @@ class _AudioImportScreenState extends State<AudioImportScreen> {
         File audioFile = File(result.files.single.path!);
         
         // Process the audio file
-        final stems = await _audioService.separateStems(audioFile);
+        // Change the separateStems call to use audioFile.path:
+        final stems = await _audioService.separateStems(audioFile.path);
         
         // Navigate to track editor with the stems
         if (mounted) {

@@ -634,17 +634,17 @@ class AdvancedMixingService {
       // Analyze current mix and suggest improvements
       final analysis = await _analyzeMixBalance();
       
-      // Apply automatic adjustments
-      if (analysis['bassHeavy']) {
+      // Replace the problematic if statements with:
+      if (analysis['bassHeavy'] == true) {
         await updateEQBand('lowShelf', 'gain', -1.5);
       }
-      if (analysis['tooMuchMidrange']) {
+      if (analysis['tooMuchMidrange'] == true) {
         await updateEQBand('lowMid', 'gain', -1.0);
       }
-      if (analysis['lackingPresence']) {
+      if (analysis['lackingPresence'] == true) {
         await updateEQBand('highMid', 'gain', 1.5);
       }
-      if (analysis['dullTop']) {
+      if (analysis['dullTop'] == true) {
         await updateEQBand('highShelf', 'gain', 1.0);
       }
       

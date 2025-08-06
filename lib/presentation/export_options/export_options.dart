@@ -419,7 +419,7 @@ class _ExportOptionsState extends State<ExportOptions> {
             progress: _exportProgress,
             status: _exportStatus,
             errorMessage: '',
-            estimatedTime: 0,
+            estimatedTime: "0",  // String instead of int
             hasError: false,
             isCompleted: false,
             onCancel: () {

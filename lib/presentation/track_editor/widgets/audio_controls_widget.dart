@@ -8,39 +8,39 @@ import '../../../widgets/custom_icon_widget.dart';
 class AudioControlsWidget extends StatelessWidget {
   final double volume;
   final double pitch;
-  final double speed;
   final double pan;
   final double reverb;
   final double echo;
+  final double speed; // Add this
   final Map<String, double> eq;
   final Function(double) onVolumeChanged;
   final Function(double) onPitchChanged;
-  final Function(double) onSpeedChanged;
   final Function(double) onPanChanged;
   final Function(double) onReverbChanged;
   final Function(double) onEchoChanged;
+  final Function(double) onSpeedChanged; // Add this
   final Function(Map<String, double>) onEqChanged;
-  final VoidCallback? onReset;
-
+  final VoidCallback? onReset; // Add this
+  
   const AudioControlsWidget({
-    super.key,
+    Key? key,
     required this.volume,
     required this.pitch,
-    required this.speed,
     required this.pan,
     required this.reverb,
     required this.echo,
+    required this.speed, // Add this
     required this.eq,
     required this.onVolumeChanged,
     required this.onPitchChanged,
-    required this.onSpeedChanged,
     required this.onPanChanged,
     required this.onReverbChanged,
     required this.onEchoChanged,
+    required this.onSpeedChanged, // Add this
     required this.onEqChanged,
-    this.onReset,
-  });
-
+    this.onReset, // Add this
+  }) : super(key: key);
+  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -276,48 +276,50 @@ class AudioControlsWidget extends StatelessWidget {
   }
 
   Widget _buildEqBand(String label, double value, Function(double) onChanged) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-            color: AppTheme.accentColor,
-            fontWeight: FontWeight.w500,
+    return Builder(
+      builder: (context) => Column(
+        children: [
+          Text(
+            label,
+            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.accentColor,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-        SizedBox(height: 1.h),
-        SizedBox(
-          height: 20.h,
-          width: 8.w,
-          child: RotatedBox(
-            quarterTurns: 3,
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppTheme.accentColor,
-                inactiveTrackColor: AppTheme.borderColor,
-                thumbColor: AppTheme.accentColor,
-                overlayColor: AppTheme.accentColor.withValues(alpha: 0.2),
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              ),
-              child: Slider(
-                value: value.clamp(-12.0, 12.0),
-                min: -12.0,
-                max: 12.0,
-                onChanged: onChanged,
+          SizedBox(height: 1.h),
+          SizedBox(
+            height: 20.h,
+            width: 8.w,
+            child: RotatedBox(
+              quarterTurns: 3,
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: AppTheme.accentColor,
+                  inactiveTrackColor: AppTheme.borderColor,
+                  thumbColor: AppTheme.accentColor,
+                  overlayColor: AppTheme.accentColor.withValues(alpha: 0.2),
+                  trackHeight: 3,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                ),
+                child: Slider(
+                  value: value.clamp(-12.0, 12.0),
+                  min: -12.0,
+                  max: 12.0,
+                  onChanged: onChanged,
+                ),
               ),
             ),
           ),
-        ),
-        SizedBox(height: 1.h),
-        Text(
-          '${value.toStringAsFixed(1)}dB',
-          style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-            color: AppTheme.accentColor,
-            fontWeight: FontWeight.w600,
+          SizedBox(height: 1.h),
+          Text(
+            '${value.toStringAsFixed(1)}dB',
+            style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+              color: AppTheme.accentColor,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
