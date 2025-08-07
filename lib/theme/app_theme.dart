@@ -38,9 +38,41 @@ class AppTheme {
       Color(0x1A000000); // 2dp shadows with 0.1 opacity
   static const Color shadowLight = Color(0x1F000000);
 
+  // Glassmorphism colors
+  static const Color glassBackground = Color(0x0DFFFFFF);
+  static const Color glassBorder = Color(0x1AFFFFFF);
+  static const Color glassHighlight = Color(0x26FFFFFF);
+  static const Color glassShadow = Color(0x40000000);
+
+  // Text theme for consistent typography
+  static const TextTheme textTheme = TextTheme(
+    headlineLarge: TextStyle(color: Colors.white),
+    titleMedium: TextStyle(color: Colors.white),
+    bodyMedium: TextStyle(color: Colors.white),
+    bodySmall: TextStyle(color: Colors.white),
+    labelLarge: TextStyle(color: Colors.white),
+  );
+
+  // Gradient colors for glassmorphism effects
+  static const List<Color> primaryGradient = [
+    Color(0xFF6C5CE7),
+    Color(0xFF74B9FF),
+  ];
+  
+  static const List<Color> accentGradient = [
+    Color(0xFF00CEC9),
+    Color(0xFF55EFC4),
+  ];
+  
+  static const List<Color> backgroundGradient = [
+    Color(0xFF0D1117),
+    Color(0xFF161B22),
+  ];
+
   // Text emphasis colors for dark theme
   static const Color textHighEmphasisDark = Color(0xFFFFFFFF); // 100% opacity
   static const Color textMediumEmphasisDark = Color(0xB3FFFFFF); // 70% opacity
+  static const Color textLowEmphasisDark = Color(0x80FFFFFF); // 50% opacity
   static const Color textDisabledDark = Color(0x61FFFFFF); // 38% opacity
 
   // Text emphasis colors for light theme

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../core/app_export.dart';
+import '../../core/utils/glassmorphism_utils.dart';
 import './widgets/compression_controls_widget.dart';
-import './widgets/delay_controls_widget.dart';
+import './widgets/echo_controls_widget.dart';
 import './widgets/eq_controls_widget.dart';
 import './widgets/reverb_controls_widget.dart';
 import './widgets/waveform_visualization_widget.dart';
+import '../../widgets/effects/enhanced_effects_panel.dart';
 
 class EffectsPanel extends StatefulWidget {
   const EffectsPanel({super.key});
@@ -83,43 +85,68 @@ class _EffectsPanelState extends State<EffectsPanel>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.primaryDark,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildWaveformSection(),
-            _buildTabBar(),
-            Expanded(
-              child: _buildTabBarView(),
-            ),
-            _buildBottomControls(),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: AppTheme.backgroundGradient,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _buildEnhancedHeader(),
+              SizedBox(height: 2.h),
+              _buildWaveformSection(),
+              SizedBox(height: 1.h),
+              Expanded(
+                child: EnhancedEffectsPanel(
+                  onEffectChanged: _handleEffectChange,
+                  effectsEnabled: Map.fromEntries(
+                    _effectsBypassed.entries.map((e) => MapEntry(e.key, !e.value)),
+                  ),
+                  effectsParameters: _effectsParameters,
+                ),
+              ),
+              _buildEnhancedBottomControls(),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
+  Widget _buildEnhancedHeader() {
+    return GlassmorphismUtils.createGlassContainer(
+      borderRadius: 16,
+      blur: 12,
+      opacity: 0.1,
+      margin: EdgeInsets.all(2.w),
       padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.borderColor),
+      boxShadow: [
+        BoxShadow(
+          color: AppTheme.glassShadow,
+          blurRadius: 20,
+          offset: const Offset(0, 8),
         ),
-      ),
+      ],
       child: Row(
         children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: EdgeInsets.all(2.w),
-              decoration: BoxDecoration(
-                color: AppTheme.secondaryDark,
-                borderRadius: BorderRadius.circular(8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.accentColor.withOpacity(0.2),
+                  AppTheme.accentColor.withOpacity(0.1),
+                ],
               ),
-              child: CustomIconWidget(
-                iconName: 'keyboard_arrow_down',
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: CustomIconWidget(
+                iconName: 'arrow_back',
                 color: AppTheme.textPrimary,
                 size: 24,
               ),
@@ -131,16 +158,19 @@ class _EffectsPanelState extends State<EffectsPanel>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Effects Panel',
-                  style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
+                  'Professional Effects',
+                  style: AppTheme.darkTheme.textTheme.headlineSmall?.copyWith(
                     color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20.sp,
                   ),
                 ),
+                SizedBox(height: 0.5.h),
                 Text(
-                  'Professional audio processing controls',
-                  style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                  'Studio-grade audio processing suite',
+                  style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
                     color: AppTheme.textSecondary,
+                    fontSize: 12.sp,
                   ),
                 ),
               ],
@@ -157,8 +187,20 @@ class _EffectsPanelState extends State<EffectsPanel>
       icon: Container(
         padding: EdgeInsets.all(2.w),
         decoration: BoxDecoration(
-          color: AppTheme.accentColor,
-          borderRadius: BorderRadius.circular(8),
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.accentColor,
+              AppTheme.accentColor.withOpacity(0.8),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.accentColor.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: CustomIconWidget(
           iconName: 'apps',
@@ -168,32 +210,62 @@ class _EffectsPanelState extends State<EffectsPanel>
       ),
       color: AppTheme.surfaceColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: AppTheme.borderColor),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: AppTheme.accentColor.withOpacity(0.3),
+          width: 1,
+        ),
       ),
       onSelected: (route) => Navigator.pushNamed(context, route),
       itemBuilder: (context) => _navigationRoutes.map((routeData) {
         return PopupMenuItem<String>(
           value: routeData['route'],
-          child: ListTile(
-            leading: CustomIconWidget(
-              iconName: routeData['icon'],
-              color: AppTheme.accentColor,
-              size: 20,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.surfaceColor.withOpacity(0.9),
+                  AppTheme.surfaceColor.withOpacity(0.7),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8),
             ),
-            title: Text(
-              routeData['title'],
-              style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textPrimary,
+            child: ListTile(
+              leading: Container(
+                padding: EdgeInsets.all(1.w),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.accentColor.withOpacity(0.2),
+                      AppTheme.accentColor.withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: CustomIconWidget(
+                  iconName: routeData['icon'],
+                  color: AppTheme.accentColor,
+                  size: 20,
+                ),
+              ),
+              title: Text(
+                routeData['title'],
+                style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                routeData['description'],
+                style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 2.w,
+                vertical: 1.h,
               ),
             ),
-            subtitle: Text(
-              routeData['description'],
-              style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
-            ),
-            contentPadding: EdgeInsets.zero,
           ),
         );
       }).toList(),
@@ -201,75 +273,152 @@ class _EffectsPanelState extends State<EffectsPanel>
   }
 
   Widget _buildWaveformSection() {
-    return WaveformVisualizationWidget(
-      isProcessing: _isProcessing,
-      activeEffects: Map.fromEntries(
-        _effectsBypassed.entries.map((e) => MapEntry(e.key, !e.value)),
+    return GlassmorphismUtils.createGlassContainer(
+      borderRadius: 16,
+      blur: 10,
+      opacity: 0.08,
+      margin: EdgeInsets.symmetric(horizontal: 2.w),
+      padding: EdgeInsets.all(2.w),
+      child: WaveformVisualizationWidget(
+        isProcessing: _isProcessing,
+        activeEffects: Map.fromEntries(
+          _effectsBypassed.entries.map((e) => MapEntry(e.key, !e.value)),
+        ),
       ),
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildEnhancedTabBar() {
     return Container(
+      margin: EdgeInsets.symmetric(horizontal: 2.w),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.borderColor),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.surfaceColor.withOpacity(0.8),
+            AppTheme.surfaceColor.withOpacity(0.6),
+          ],
         ),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        tabs: [
-          _buildTab('EQ', 'equalizer', !_effectsBypassed['eq']!),
-          _buildTab('Reverb', 'surround_sound', !_effectsBypassed['reverb']!),
-          _buildTab('Delay', 'repeat', !_effectsBypassed['delay']!),
-          _buildTab('Comp', 'compress', !_effectsBypassed['compression']!),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.accentColor.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryDark.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
         ],
-        labelColor: AppTheme.accentColor,
-        unselectedLabelColor: AppTheme.textSecondary,
-        indicatorColor: AppTheme.accentColor,
-        indicatorWeight: 3,
-        labelStyle: AppTheme.darkTheme.textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle:
-            AppTheme.darkTheme.textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.w400,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: TabBar(
+          controller: _tabController,
+          tabs: [
+            _buildEnhancedTab('EQ', 'equalizer', !_effectsBypassed['eq']!),
+            _buildEnhancedTab('Reverb', 'surround_sound', !_effectsBypassed['reverb']!),
+            _buildEnhancedTab('Echo', 'repeat', !_effectsBypassed['delay']!),
+            _buildEnhancedTab('Comp', 'compress', !_effectsBypassed['compression']!),
+          ],
+          labelColor: AppTheme.accentColor,
+          unselectedLabelColor: AppTheme.textSecondary,
+          indicatorColor: AppTheme.accentColor,
+          indicatorWeight: 3,
+          indicatorPadding: EdgeInsets.symmetric(horizontal: 2.w),
+          labelStyle: AppTheme.darkTheme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 11.sp,
+          ),
+          unselectedLabelStyle:
+              AppTheme.darkTheme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w400,
+            fontSize: 11.sp,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTab(String label, String iconName, bool isActive) {
+  Widget _buildEnhancedTab(String label, String iconName, bool isActive) {
     return Tab(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Stack(
-            children: [
-              CustomIconWidget(
-                iconName: iconName,
-                color: isActive ? AppTheme.accentColor : AppTheme.textSecondary,
-                size: 20,
-              ),
-              if (isActive)
-                Positioned(
-                  right: -2,
-                  top: -2,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: AppTheme.successColor,
-                      shape: BoxShape.circle,
-                    ),
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 1.h, horizontal: 2.w),
+        decoration: BoxDecoration(
+          gradient: isActive
+              ? LinearGradient(
+                  colors: [
+                    AppTheme.accentColor.withOpacity(0.2),
+                    AppTheme.accentColor.withOpacity(0.1),
+                  ],
+                )
+              : null,
+          borderRadius: BorderRadius.circular(12),
+          border: isActive
+              ? Border.all(
+                  color: AppTheme.accentColor.withOpacity(0.3),
+                  width: 1,
+                )
+              : null,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(1.w),
+                  decoration: BoxDecoration(
+                    gradient: isActive
+                        ? LinearGradient(
+                            colors: [
+                              AppTheme.accentColor.withOpacity(0.3),
+                              AppTheme.accentColor.withOpacity(0.1),
+                            ],
+                          )
+                        : null,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: CustomIconWidget(
+                    iconName: iconName,
+                    color: isActive ? AppTheme.accentColor : AppTheme.textSecondary,
+                    size: 20,
                   ),
                 ),
-            ],
-          ),
-          SizedBox(height: 0.5.h),
-          Text(label),
-        ],
+                if (isActive)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: AppTheme.successColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.successColor.withOpacity(0.5),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            SizedBox(height: 0.5.h),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                fontSize: 10.sp,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -280,28 +429,28 @@ class _EffectsPanelState extends State<EffectsPanel>
       children: [
         EqControlsWidget(
           onEqChange: (frequency, gain) =>
-              _handleEffectChange('eq', frequency, gain),
+              _handleEffectChange('eq', {'frequency': frequency, 'gain': gain}),
           onReset: () => _handleEffectReset('eq'),
           isBypassed: _effectsBypassed['eq']!,
           onBypassToggle: () => _toggleEffectBypass('eq'),
         ),
         ReverbControlsWidget(
           onReverbChange: (parameter, value) =>
-              _handleEffectChange('reverb', parameter, value),
+              _handleEffectChange('reverb', {parameter: value}),
           onReset: () => _handleEffectReset('reverb'),
           isBypassed: _effectsBypassed['reverb']!,
           onBypassToggle: () => _toggleEffectBypass('reverb'),
         ),
-        DelayControlsWidget(
-          onDelayChange: (parameter, value) =>
-              _handleEffectChange('delay', parameter, value),
+        EchoControlsWidget(
+          onEchoChange: (parameter, value) =>
+              _handleEffectChange('delay', {parameter: value}),
           onReset: () => _handleEffectReset('delay'),
           isBypassed: _effectsBypassed['delay']!,
           onBypassToggle: () => _toggleEffectBypass('delay'),
         ),
         CompressionControlsWidget(
           onCompressionChange: (parameter, value) =>
-              _handleEffectChange('compression', parameter, value),
+              _handleEffectChange('compression', {parameter: value}),
           onReset: () => _handleEffectReset('compression'),
           isBypassed: _effectsBypassed['compression']!,
           onBypassToggle: () => _toggleEffectBypass('compression'),
@@ -310,56 +459,102 @@ class _EffectsPanelState extends State<EffectsPanel>
     );
   }
 
-  Widget _buildBottomControls() {
-    return Container(
+  Widget _buildEnhancedBottomControls() {
+    return GlassmorphismUtils.createGlassContainer(
+      borderRadius: 16,
+      blur: 12,
+      opacity: 0.1,
+      margin: EdgeInsets.all(2.w),
       padding: EdgeInsets.all(4.w),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        border: Border(
-          top: BorderSide(color: AppTheme.borderColor),
+      boxShadow: [
+        BoxShadow(
+          color: AppTheme.glassShadow,
+          blurRadius: 20,
+          offset: const Offset(0, -8),
         ),
-      ),
+      ],
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton.icon(
-              onPressed: _resetAllEffects,
-              icon: CustomIconWidget(
-                iconName: 'refresh',
-                color: AppTheme.accentColor,
-                size: 18,
-              ),
-              label: Text(
-                'Reset All',
-                style: AppTheme.darkTheme.textTheme.labelLarge?.copyWith(
-                  color: AppTheme.accentColor,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.accentColor.withOpacity(0.1),
+                    AppTheme.accentColor.withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.accentColor.withOpacity(0.3),
+                  width: 1,
                 ),
               ),
-              style: AppTheme.darkTheme.outlinedButtonTheme.style?.copyWith(
-                padding: WidgetStateProperty.all(
-                  EdgeInsets.symmetric(vertical: 1.5.h),
+              child: OutlinedButton.icon(
+                onPressed: _resetAllEffects,
+                icon: CustomIconWidget(
+                  iconName: 'refresh',
+                  color: AppTheme.accentColor,
+                  size: 18,
+                ),
+                label: Text(
+                  'Reset All',
+                  style: AppTheme.darkTheme.textTheme.labelLarge?.copyWith(
+                    color: AppTheme.accentColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  side: BorderSide.none,
+                  padding: EdgeInsets.symmetric(vertical: 1.5.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
           ),
           SizedBox(width: 3.w),
           Expanded(
-            child: ElevatedButton.icon(
-              onPressed: _savePreset,
-              icon: CustomIconWidget(
-                iconName: 'save',
-                color: AppTheme.primaryDark,
-                size: 18,
-              ),
-              label: Text(
-                'Save Preset',
-                style: AppTheme.darkTheme.textTheme.labelLarge?.copyWith(
-                  color: AppTheme.primaryDark,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.accentColor.withOpacity(0.8),
+                    AppTheme.accentColor.withOpacity(0.6),
+                  ],
                 ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accentColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              style: AppTheme.darkTheme.elevatedButtonTheme.style?.copyWith(
-                padding: WidgetStateProperty.all(
-                  EdgeInsets.symmetric(vertical: 1.5.h),
+              child: ElevatedButton.icon(
+                onPressed: _savePreset,
+                icon: CustomIconWidget(
+                  iconName: 'save',
+                  color: AppTheme.primaryDark,
+                  size: 18,
+                ),
+                label: Text(
+                  'Save Preset',
+                  style: AppTheme.darkTheme.textTheme.labelLarge?.copyWith(
+                    color: AppTheme.primaryDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: EdgeInsets.symmetric(vertical: 1.5.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
             ),
@@ -367,8 +562,20 @@ class _EffectsPanelState extends State<EffectsPanel>
           SizedBox(width: 3.w),
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.successColor,
-              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.successColor,
+                  AppTheme.successColor.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.successColor.withOpacity(0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
             ),
             child: IconButton(
               onPressed: _applyEffects,
@@ -377,6 +584,9 @@ class _EffectsPanelState extends State<EffectsPanel>
                 color: AppTheme.primaryDark,
                 size: 24,
               ),
+              style: IconButton.styleFrom(
+                padding: EdgeInsets.all(3.w),
+              ),
             ),
           ),
         ],
@@ -384,7 +594,17 @@ class _EffectsPanelState extends State<EffectsPanel>
     );
   }
 
-  void _handleEffectChange(String effectType, String parameter, dynamic value) {
+  void _handleEffectChange(String effectType, Map<String, dynamic> parameters) {
+    setState(() {
+      _effectsParameters[effectType]!.addAll(parameters);
+    });
+    parameters.forEach((parameter, value) {
+      _processAudioEffect(effectType, parameter, value);
+    });
+  }
+
+  // Legacy method for backward compatibility
+  void _handleEffectChangeLegacy(String effectType, String parameter, dynamic value) {
     setState(() {
       _effectsParameters[effectType]![parameter] = value;
     });

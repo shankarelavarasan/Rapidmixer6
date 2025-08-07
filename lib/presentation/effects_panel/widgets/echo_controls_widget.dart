@@ -1,102 +1,105 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'dart:math';
 import '../../../core/app_export.dart';
 
-class CompressionControlsWidget extends StatefulWidget {
+class EchoControlsWidget extends StatefulWidget {
   final bool isBypassed;
-  final Function(String, double) onCompressionChange;
+  final Function(String, double) onEchoChange;
   final VoidCallback onReset;
   final VoidCallback? onBypassToggle;
 
-  const CompressionControlsWidget({
+  const EchoControlsWidget({
     super.key,
     required this.isBypassed,
-    required this.onCompressionChange,
+    required this.onEchoChange,
     required this.onReset,
     this.onBypassToggle,
   });
 
   @override
-  State<CompressionControlsWidget> createState() => _CompressionControlsWidgetState();
+  State<EchoControlsWidget> createState() => _EchoControlsWidgetState();
 }
 
-class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
+class _EchoControlsWidgetState extends State<EchoControlsWidget>
     with TickerProviderStateMixin {
-  // Core compression parameters
-  double _threshold = 0.7; // -6dB
-  double _ratio = 0.4; // 4:1
-  double _attack = 0.3; // 3ms
-  double _release = 0.5; // 50ms
-  double _makeupGain = 0.2; // +2dB
-  double _knee = 0.3; // Soft knee
+  // Core echo parameters
+  double _delayTime = 0.3; // 300ms
+  double _feedback = 0.4; // 40%
+  double _wetDryMix = 0.3; // 30% wet
+  double _highCut = 0.7; // High frequency damping
+  double _lowCut = 0.2; // Low frequency damping
   
   // Advanced parameters
-  double _lookAhead = 0.1;
-  double _sidechain = 0.0;
+  double _stereoSpread = 0.5;
+  double _modulation = 0.1;
+  double _pingPong = 0.0;
   
   // UI state
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  bool _showGainReduction = false;
+  late AnimationController _waveformController;
+  late Animation<double> _waveformAnimation;
+  bool _showWaveform = false;
   String _selectedPreset = 'Vocal';
   
-  // Compression presets
-  final List<Map<String, dynamic>> _compressionPresets = [
+  // Echo presets
+  final List<Map<String, dynamic>> _echoPresets = [
     {
       'name': 'Vocal',
-      'threshold': 0.7,
-      'ratio': 0.4,
-      'attack': 0.2,
-      'release': 0.4,
-      'makeupGain': 0.3,
-      'knee': 0.4,
-      'lookAhead': 0.1,
-      'sidechain': 0.0,
+      'delayTime': 0.25,
+      'feedback': 0.3,
+      'wetDryMix': 0.2,
+      'highCut': 0.8,
+      'lowCut': 0.3,
+      'stereoSpread': 0.4,
+      'modulation': 0.05,
+      'pingPong': 0.0,
     },
     {
-      'name': 'Drums',
-      'threshold': 0.6,
-      'ratio': 0.6,
-      'attack': 0.1,
-      'release': 0.2,
-      'makeupGain': 0.4,
-      'knee': 0.2,
-      'lookAhead': 0.05,
-      'sidechain': 0.0,
+      'name': 'Slap',
+      'delayTime': 0.15,
+      'feedback': 0.2,
+      'wetDryMix': 0.3,
+      'highCut': 0.9,
+      'lowCut': 0.1,
+      'stereoSpread': 0.2,
+      'modulation': 0.0,
+      'pingPong': 0.0,
     },
     {
-      'name': 'Bass',
-      'threshold': 0.8,
-      'ratio': 0.3,
-      'attack': 0.4,
-      'release': 0.6,
-      'makeupGain': 0.2,
-      'knee': 0.5,
-      'lookAhead': 0.2,
-      'sidechain': 0.0,
+      'name': 'Tape',
+      'delayTime': 0.4,
+      'feedback': 0.6,
+      'wetDryMix': 0.4,
+      'highCut': 0.5,
+      'lowCut': 0.4,
+      'stereoSpread': 0.3,
+      'modulation': 0.2,
+      'pingPong': 0.0,
     },
     {
-      'name': 'Master',
-      'threshold': 0.9,
-      'ratio': 0.2,
-      'attack': 0.3,
-      'release': 0.5,
-      'makeupGain': 0.1,
-      'knee': 0.6,
-      'lookAhead': 0.15,
-      'sidechain': 0.0,
+      'name': 'Ping Pong',
+      'delayTime': 0.35,
+      'feedback': 0.5,
+      'wetDryMix': 0.5,
+      'highCut': 0.7,
+      'lowCut': 0.2,
+      'stereoSpread': 1.0,
+      'modulation': 0.1,
+      'pingPong': 1.0,
     },
     {
-      'name': 'Limiter',
-      'threshold': 0.95,
-      'ratio': 1.0,
-      'attack': 0.05,
-      'release': 0.1,
-      'makeupGain': 0.0,
-      'knee': 0.0,
-      'lookAhead': 0.3,
-      'sidechain': 0.0,
+      'name': 'Ambient',
+      'delayTime': 0.8,
+      'feedback': 0.7,
+      'wetDryMix': 0.6,
+      'highCut': 0.4,
+      'lowCut': 0.5,
+      'stereoSpread': 0.8,
+      'modulation': 0.3,
+      'pingPong': 0.5,
     },
   ];
 
@@ -114,12 +117,28 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
+    
+    // Initialize waveform animation
+    _waveformController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _waveformAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _waveformController,
+      curve: Curves.linear,
+    ));
+    
     _animationController.forward();
+    _waveformController.repeat();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _waveformController.dispose();
     super.dispose();
   }
 
@@ -158,8 +177,8 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
             SizedBox(height: 3.h),
             _buildPresetSelector(),
             SizedBox(height: 3.h),
-            if (_showGainReduction) ...[
-              _buildGainReductionMeter(),
+            if (_showWaveform) ...[
+              _buildEchoWaveform(),
               SizedBox(height: 3.h),
             ],
             _buildEnhancedParameterControls(),
@@ -196,7 +215,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Professional Compressor',
+                'Professional Echo',
                 style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
@@ -204,7 +223,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
               ),
               SizedBox(height: 0.5.h),
               Text(
-                'Dynamic Range Control',
+                'Digital Delay Processing',
                 style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
                   color: AppTheme.textSecondary,
                   fontSize: 10.sp,
@@ -217,11 +236,11 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
               IconButton(
                 onPressed: () {
                   setState(() {
-                    _showGainReduction = !_showGainReduction;
+                    _showWaveform = !_showWaveform;
                   });
                 },
                 icon: Icon(
-                  _showGainReduction ? Icons.visibility_off : Icons.visibility,
+                  _showWaveform ? Icons.show_chart : Icons.graphic_eq,
                   color: AppTheme.accentColor,
                   size: 6.w,
                 ),
@@ -292,7 +311,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Compression Presets',
+            'Echo Presets',
             style: AppTheme.darkTheme.textTheme.titleSmall?.copyWith(
               color: AppTheme.textPrimary,
               fontWeight: FontWeight.w600,
@@ -303,9 +322,9 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
             height: 8.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              itemCount: _compressionPresets.length,
+              itemCount: _echoPresets.length,
               itemBuilder: (context, index) {
-                final preset = _compressionPresets[index];
+                final preset = _echoPresets[index];
                 final isSelected = _selectedPreset == preset['name'];
                 
                 return AnimatedContainer(
@@ -372,7 +391,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
     );
   }
 
-  Widget _buildGainReductionMeter() {
+  Widget _buildEchoWaveform() {
     return Container(
       padding: EdgeInsets.all(3.w),
       decoration: BoxDecoration(
@@ -394,7 +413,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Gain Reduction Meter',
+            'Echo Waveform',
             style: AppTheme.darkTheme.textTheme.titleSmall?.copyWith(
               color: AppTheme.textPrimary,
               fontWeight: FontWeight.w600,
@@ -402,7 +421,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
           ),
           SizedBox(height: 2.h),
           Container(
-            height: 15.h,
+            height: 12.h,
             decoration: BoxDecoration(
               color: AppTheme.primaryDark.withOpacity(0.5),
               borderRadius: BorderRadius.circular(8),
@@ -411,14 +430,25 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
                 width: 1,
               ),
             ),
-            child: CustomPaint(
-              painter: GainReductionMeterPainter(
-                _threshold,
-                _ratio,
-                _makeupGain,
-                widget.isBypassed,
-              ),
-              size: Size.infinite,
+            child: AnimatedBuilder(
+              animation: _waveformAnimation,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: EchoWaveformPainter(
+                    _delayTime,
+                    _feedback,
+                    _wetDryMix,
+                    _modulation,
+                    widget.isBypassed,
+                    animationValue: _waveformAnimation.value,
+                    stereoSpread: _stereoSpread,
+                    pingPong: _pingPong,
+                    highCut: _highCut,
+                    lowCut: _lowCut,
+                  ),
+                  size: Size.infinite,
+                );
+              },
             ),
           ),
         ],
@@ -448,7 +478,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Compression Parameters',
+            'Echo Parameters',
             style: AppTheme.darkTheme.textTheme.titleSmall?.copyWith(
               color: AppTheme.textPrimary,
               fontWeight: FontWeight.w600,
@@ -459,34 +489,34 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
             children: [
               Expanded(
                 child: _buildEnhancedParameterSlider(
-                  'Threshold',
-                  _threshold,
+                  'Delay Time',
+                  _delayTime,
                   0.0,
                   1.0,
-                  Icons.horizontal_rule,
-                  AppTheme.errorColor,
+                  Icons.access_time,
+                  AppTheme.accentColor,
                   (value) {
                     setState(() {
-                      _threshold = value;
+                      _delayTime = value;
                     });
-                    widget.onCompressionChange('threshold', value);
+                    widget.onEchoChange('delayTime', value);
                   },
                 ),
               ),
               SizedBox(width: 3.w),
               Expanded(
                 child: _buildEnhancedParameterSlider(
-                  'Ratio',
-                  _ratio,
+                  'Feedback',
+                  _feedback,
                   0.0,
                   1.0,
-                  Icons.compress,
+                  Icons.repeat,
                   AppTheme.warningColor,
                   (value) {
                     setState(() {
-                      _ratio = value;
+                      _feedback = value;
                     });
-                    widget.onCompressionChange('ratio', value);
+                    widget.onEchoChange('feedback', value);
                   },
                 ),
               ),
@@ -497,34 +527,34 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
             children: [
               Expanded(
                 child: _buildEnhancedParameterSlider(
-                  'Attack',
-                  _attack,
+                  'Wet/Dry Mix',
+                  _wetDryMix,
                   0.0,
                   1.0,
-                  Icons.flash_on,
-                  AppTheme.accentColor,
-                  (value) {
-                    setState(() {
-                      _attack = value;
-                    });
-                    widget.onCompressionChange('attack', value);
-                  },
-                ),
-              ),
-              SizedBox(width: 3.w),
-              Expanded(
-                child: _buildEnhancedParameterSlider(
-                  'Release',
-                  _release,
-                  0.0,
-                  1.0,
-                  Icons.flash_off,
+                  Icons.water_drop,
                   AppTheme.successColor,
                   (value) {
                     setState(() {
-                      _release = value;
+                      _wetDryMix = value;
                     });
-                    widget.onCompressionChange('release', value);
+                    widget.onEchoChange('wetDryMix', value);
+                  },
+                ),
+              ),
+              SizedBox(width: 3.w),
+              Expanded(
+                child: _buildEnhancedParameterSlider(
+                  'High Cut',
+                  _highCut,
+                  0.0,
+                  1.0,
+                  Icons.trending_down,
+                  AppTheme.errorColor,
+                  (value) {
+                    setState(() {
+                      _highCut = value;
+                    });
+                    widget.onEchoChange('highCut', value);
                   },
                 ),
               ),
@@ -535,34 +565,34 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
             children: [
               Expanded(
                 child: _buildEnhancedParameterSlider(
-                  'Makeup Gain',
-                  _makeupGain,
+                  'Low Cut',
+                  _lowCut,
                   0.0,
                   1.0,
-                  Icons.volume_up,
+                  Icons.trending_up,
                   AppTheme.accentColor,
                   (value) {
                     setState(() {
-                      _makeupGain = value;
+                      _lowCut = value;
                     });
-                    widget.onCompressionChange('makeupGain', value);
+                    widget.onEchoChange('lowCut', value);
                   },
                 ),
               ),
               SizedBox(width: 3.w),
               Expanded(
                 child: _buildEnhancedParameterSlider(
-                  'Knee',
-                  _knee,
+                  'Stereo Spread',
+                  _stereoSpread,
                   0.0,
                   1.0,
-                  Icons.tune,
+                  Icons.surround_sound,
                   AppTheme.warningColor,
                   (value) {
                     setState(() {
-                      _knee = value;
+                      _stereoSpread = value;
                     });
-                    widget.onCompressionChange('knee', value);
+                    widget.onEchoChange('stereoSpread', value);
                   },
                 ),
               ),
@@ -586,30 +616,29 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
     String unit;
     
     switch (label) {
-      case 'Threshold':
-        displayValue = '${(-60 + (value * 60)).toInt()}';
-        unit = 'dB';
-        break;
-      case 'Ratio':
-        final ratioValue = 1 + (value * 19); // 1:1 to 20:1
-        displayValue = '${ratioValue.toStringAsFixed(1)}:1';
-        unit = '';
-        break;
-      case 'Attack':
-        displayValue = '${(0.1 + (value * 99.9)).toStringAsFixed(1)}';
-        unit = 'ms';
-        break;
-      case 'Release':
+      case 'Delay Time':
         displayValue = '${(10 + (value * 990)).toInt()}';
         unit = 'ms';
         break;
-      case 'Makeup Gain':
-        displayValue = '${(value * 20).toStringAsFixed(1)}';
-        unit = 'dB';
+      case 'Feedback':
+        displayValue = '${(value * 100).toInt()}';
+        unit = '%';
         break;
-      case 'Knee':
-        displayValue = '${(value * 10).toStringAsFixed(1)}';
-        unit = 'dB';
+      case 'Wet/Dry Mix':
+        displayValue = '${(value * 100).toInt()}';
+        unit = '%';
+        break;
+      case 'High Cut':
+        displayValue = '${(2000 + (value * 18000)).toInt()}';
+        unit = 'Hz';
+        break;
+      case 'Low Cut':
+        displayValue = '${(20 + (value * 480)).toInt()}';
+        unit = 'Hz';
+        break;
+      case 'Stereo Spread':
+        displayValue = '${(value * 100).toInt()}';
+        unit = '%';
         break;
       default:
         displayValue = '${(value * 100).toInt()}';
@@ -692,7 +721,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 4,
-              thumbShape: CustomCompressionSliderThumb(accentColor),
+              thumbShape: CustomEchoSliderThumb(accentColor),
               overlayShape: RoundSliderOverlayShape(overlayRadius: 12),
               activeTrackColor: widget.isBypassed
                   ? AppTheme.textSecondary
@@ -757,24 +786,24 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
                 AppTheme.warningColor,
                 () {
                   setState(() {
-                    _threshold = 0.7;
-                    _ratio = 0.4;
-                    _attack = 0.3;
-                    _release = 0.5;
-                    _makeupGain = 0.2;
-                    _knee = 0.3;
-                    _lookAhead = 0.1;
-                    _sidechain = 0.0;
+                    _delayTime = 0.3;
+                    _feedback = 0.4;
+                    _wetDryMix = 0.3;
+                    _highCut = 0.7;
+                    _lowCut = 0.2;
+                    _stereoSpread = 0.5;
+                    _modulation = 0.1;
+                    _pingPong = 0.0;
                   });
                   widget.onReset();
                 },
               ),
               _buildControlButton(
-                'Auto',
-                Icons.auto_fix_high,
+                'Sync',
+                Icons.sync,
                 AppTheme.successColor,
                 () {
-                  // Auto compression adjustment logic
+                  // Tempo sync logic
                 },
               ),
               _buildControlButton(
@@ -795,7 +824,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Look-ahead',
+                      'Modulation',
                       style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
                         color: AppTheme.textSecondary,
                         fontSize: 10.sp,
@@ -805,18 +834,18 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         trackHeight: 3,
-                        thumbShape: CustomCompressionSliderThumb(AppTheme.accentColor),
+                        thumbShape: CustomEchoSliderThumb(AppTheme.accentColor),
                         overlayShape: RoundSliderOverlayShape(overlayRadius: 10),
                       ),
                       child: Slider(
-                        value: _lookAhead,
+                        value: _modulation,
                         min: 0.0,
                         max: 1.0,
                         onChanged: (value) {
                           setState(() {
-                            _lookAhead = value;
+                            _modulation = value;
                           });
-                          widget.onCompressionChange('lookAhead', value);
+                          widget.onEchoChange('modulation', value);
                         },
                         activeColor: AppTheme.accentColor,
                         inactiveColor: AppTheme.borderColor.withOpacity(0.3),
@@ -831,7 +860,7 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Sidechain',
+                      'Ping Pong',
                       style: AppTheme.darkTheme.textTheme.bodySmall?.copyWith(
                         color: AppTheme.textSecondary,
                         fontSize: 10.sp,
@@ -841,18 +870,18 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         trackHeight: 3,
-                        thumbShape: CustomCompressionSliderThumb(AppTheme.successColor),
+                        thumbShape: CustomEchoSliderThumb(AppTheme.successColor),
                         overlayShape: RoundSliderOverlayShape(overlayRadius: 10),
                       ),
                       child: Slider(
-                        value: _sidechain,
+                        value: _pingPong,
                         min: 0.0,
                         max: 1.0,
                         onChanged: (value) {
                           setState(() {
-                            _sidechain = value;
+                            _pingPong = value;
                           });
-                          widget.onCompressionChange('sidechain', value);
+                          widget.onEchoChange('pingPong', value);
                         },
                         activeColor: AppTheme.successColor,
                         inactiveColor: AppTheme.borderColor.withOpacity(0.3),
@@ -927,83 +956,115 @@ class _CompressionControlsWidgetState extends State<CompressionControlsWidget>
     switch (presetName) {
       case 'Vocal':
         return Icons.mic;
-      case 'Drums':
+      case 'Slap':
+        return Icons.flash_on;
+      case 'Tape':
         return Icons.album;
-      case 'Bass':
-        return Icons.graphic_eq;
-      case 'Master':
-        return Icons.tune;
-      case 'Limiter':
-        return Icons.block;
+      case 'Ping Pong':
+        return Icons.swap_horiz;
+      case 'Ambient':
+        return Icons.cloud;
       default:
-        return Icons.compress;
+        return Icons.graphic_eq;
     }
   }
 
   void _applyPreset(Map<String, dynamic> preset) {
     setState(() {
-      _threshold = preset['threshold'];
-      _ratio = preset['ratio'];
-      _attack = preset['attack'];
-      _release = preset['release'];
-      _makeupGain = preset['makeupGain'];
-      _knee = preset['knee'];
-      _lookAhead = preset['lookAhead'];
-      _sidechain = preset['sidechain'];
+      _delayTime = preset['delayTime'];
+      _feedback = preset['feedback'];
+      _wetDryMix = preset['wetDryMix'];
+      _highCut = preset['highCut'];
+      _lowCut = preset['lowCut'];
+      _stereoSpread = preset['stereoSpread'];
+      _modulation = preset['modulation'];
+      _pingPong = preset['pingPong'];
       _selectedPreset = preset['name'];
     });
 
     // Notify parent of all parameter changes
-    widget.onCompressionChange('threshold', _threshold);
-    widget.onCompressionChange('ratio', _ratio);
-    widget.onCompressionChange('attack', _attack);
-    widget.onCompressionChange('release', _release);
-    widget.onCompressionChange('makeupGain', _makeupGain);
-    widget.onCompressionChange('knee', _knee);
-    widget.onCompressionChange('lookAhead', _lookAhead);
-    widget.onCompressionChange('sidechain', _sidechain);
+    widget.onEchoChange('delayTime', _delayTime);
+    widget.onEchoChange('feedback', _feedback);
+    widget.onEchoChange('wetDryMix', _wetDryMix);
+    widget.onEchoChange('highCut', _highCut);
+    widget.onEchoChange('lowCut', _lowCut);
+    widget.onEchoChange('stereoSpread', _stereoSpread);
+    widget.onEchoChange('modulation', _modulation);
+    widget.onEchoChange('pingPong', _pingPong);
   }
 }
 
-class GainReductionMeterPainter extends CustomPainter {
-  final double threshold;
-  final double ratio;
-  final double makeupGain;
+class EchoWaveformPainter extends CustomPainter {
+  final double delayTime;
+  final double feedback;
+  final double wetDryMix;
+  final double modulation;
   final bool isBypassed;
+  final double animationValue;
+  final double stereoSpread;
+  final double pingPong;
+  final double highCut;
+  final double lowCut;
 
-  GainReductionMeterPainter(
-    this.threshold,
-    this.ratio,
-    this.makeupGain,
-    this.isBypassed,
-  );
+  EchoWaveformPainter(
+    this.delayTime,
+    this.feedback,
+    this.wetDryMix,
+    this.modulation,
+    this.isBypassed, {
+    this.animationValue = 1.0,
+    this.stereoSpread = 0.5,
+    this.pingPong = 0.0,
+    this.highCut = 0.7,
+    this.lowCut = 0.2,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Draw background gradient
+    _drawBackground(canvas, size);
+    
     if (isBypassed) {
       _drawBypassedState(canvas, size);
       return;
     }
 
-    _drawMeterBackground(canvas, size);
-    _drawGainReductionBars(canvas, size);
-    _drawThresholdLine(canvas, size);
-    _drawLabels(canvas, size);
+    // Draw frequency response visualization
+    _drawFrequencyResponse(canvas, size);
+    
+    // Draw stereo channels
+    _drawStereoChannels(canvas, size);
+    
+    // Draw echo signals with ping-pong effect
+    _drawAdvancedEchoSignals(canvas, size);
+    
+    // Draw modulation visualization
+    _drawEnhancedModulation(canvas, size);
+    
+    // Draw real-time parameter indicators
+    _drawParameterIndicators(canvas, size);
   }
 
   void _drawBypassedState(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = AppTheme.textSecondary.withOpacity(0.3)
-      ..style = PaintingStyle.fill;
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
 
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+    // Draw flat line indicating no processing
+    canvas.drawLine(
+      Offset(0, size.height * 0.5),
+      Offset(size.width, size.height * 0.5),
+      paint,
+    );
 
+    // Draw "BYPASSED" text
     final textPainter = TextPainter(
       text: TextSpan(
         text: 'BYPASSED',
         style: TextStyle(
-          color: AppTheme.textSecondary.withOpacity(0.7),
-          fontSize: 14,
+          color: AppTheme.textSecondary.withOpacity(0.5),
+          fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -1019,94 +1080,352 @@ class GainReductionMeterPainter extends CustomPainter {
     );
   }
 
-  void _drawMeterBackground(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppTheme.primaryDark.withOpacity(0.8)
-      ..style = PaintingStyle.fill;
-
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-
-    // Draw grid lines
+  void _drawBackground(Canvas canvas, Size size) {
+    final backgroundPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppTheme.primaryDark.withOpacity(0.05),
+          AppTheme.secondaryDark.withOpacity(0.1),
+          AppTheme.primaryDark.withOpacity(0.05),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), backgroundPaint);
+    
+    // Draw time grid
+    _drawTimeGrid(canvas, size);
+  }
+  
+  void _drawTimeGrid(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = AppTheme.borderColor.withOpacity(0.3)
-      ..strokeWidth = 1;
-
+      ..color = AppTheme.borderColor.withOpacity(0.2)
+      ..strokeWidth = 0.5
+      ..style = PaintingStyle.stroke;
+    
+    // Vertical time lines
     for (int i = 1; i < 10; i++) {
-      final y = (i / 10) * size.height;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+      final x = (i / 10) * size.width;
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x, size.height),
+        gridPaint,
+      );
+    }
+    
+    // Horizontal amplitude lines
+    for (int i = 1; i < 4; i++) {
+      final y = (i / 4) * size.height;
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y),
+        gridPaint,
+      );
     }
   }
+  
+  void _drawFrequencyResponse(Canvas canvas, Size size) {
+    final responsePaint = Paint()
+      ..color = AppTheme.accentColor.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
+    
+    final path = Path();
+    path.moveTo(0, size.height);
+    
+    for (int i = 0; i <= 100; i++) {
+      final x = (i / 100) * size.width;
+      final normalizedFreq = i / 100;
+      
+      // Calculate frequency response based on high/low cut
+      double response = 1.0;
+      
+      // High cut filter
+      if (normalizedFreq > highCut) {
+        response *= exp(-(normalizedFreq - highCut) * 5);
+      }
+      
+      // Low cut filter
+      if (normalizedFreq < lowCut) {
+        response *= exp(-(lowCut - normalizedFreq) * 5);
+      }
+      
+      final y = size.height - (response * size.height * 0.3);
+      path.lineTo(x, y);
+    }
+    
+    path.lineTo(size.width, size.height);
+    path.close();
+    
+    canvas.drawPath(path, responsePaint);
+  }
+  
+  void _drawStereoChannels(Canvas canvas, Size size) {
+    // Left channel (top half)
+    _drawChannelSignal(canvas, size, true);
+    
+    // Right channel (bottom half)
+    _drawChannelSignal(canvas, size, false);
+    
+    // Center line
+    final centerPaint = Paint()
+      ..color = AppTheme.borderColor.withOpacity(0.5)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    
+    canvas.drawLine(
+      Offset(0, size.height * 0.5),
+      Offset(size.width, size.height * 0.5),
+      centerPaint,
+    );
+  }
+  
+  void _drawChannelSignal(Canvas canvas, Size size, bool isLeftChannel) {
+    final paint = Paint()
+      ..color = isLeftChannel ? AppTheme.accentColor : AppTheme.successColor
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
 
-  void _drawGainReductionBars(Canvas canvas, Size size) {
-    final random = Random(42);
-    final barWidth = size.width / 50;
+    final path = Path();
+    final centerY = isLeftChannel ? size.height * 0.25 : size.height * 0.75;
+    final amplitude = size.height * 0.15;
+    
+    path.moveTo(0, centerY);
 
-    for (int i = 0; i < 50; i++) {
-      final x = i * barWidth;
-      final inputLevel = random.nextDouble();
-      final gainReduction = _calculateGainReduction(inputLevel);
-      final barHeight = gainReduction * size.height;
+    for (int i = 0; i <= 100; i++) {
+      final x = (i / 100) * size.width;
+      final time = i * 0.1 + animationValue * 2 * pi;
+      
+      // Add stereo spread effect
+      final spreadOffset = isLeftChannel ? -stereoSpread * 0.5 : stereoSpread * 0.5;
+      final y = centerY + sin(time + spreadOffset) * amplitude * (1.0 - wetDryMix * 0.3);
+      
+      path.lineTo(x, y);
+    }
 
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawAdvancedEchoSignals(Canvas canvas, Size size) {
+    final delayPixels = delayTime * size.width * 0.8;
+    final echoCount = (feedback * 6).round() + 1;
+
+    for (int echo = 1; echo <= echoCount; echo++) {
+      final amplitude = pow(feedback, echo) * wetDryMix;
+      final delay = delayPixels * echo;
+      
+      if (delay > size.width) break;
+
+      // Ping-pong effect: alternate between channels
+      final isPingPongLeft = pingPong > 0.5 ? (echo % 2 == 1) : true;
+      final channelY = isPingPongLeft ? size.height * 0.25 : size.height * 0.75;
+      
       final paint = Paint()
-        ..color = _getBarColor(gainReduction)
-        ..style = PaintingStyle.fill;
+        ..color = (isPingPongLeft ? AppTheme.warningColor : AppTheme.errorColor)
+            .withOpacity(amplitude * 0.8)
+        ..strokeWidth = 2.0 - (echo * 0.2)
+        ..style = PaintingStyle.stroke;
 
-      canvas.drawRect(
-        Rect.fromLTWH(x, size.height - barHeight, barWidth - 1, barHeight),
-        paint,
+      final path = Path();
+      path.moveTo(delay, channelY);
+
+      for (int i = 0; i <= 50; i++) {
+        final x = delay + (i / 50) * (size.width - delay) * 0.5;
+        if (x > size.width) break;
+        
+        final time = i * 0.2 + animationValue * 2 * pi;
+        final echoAmplitude = amplitude * size.height * 0.1;
+        
+        // Apply frequency filtering to echo
+        final filterEffect = _calculateFilterEffect(i / 50.0);
+        final y = channelY + sin(time) * echoAmplitude * filterEffect;
+        
+        path.lineTo(x, y);
+      }
+
+      canvas.drawPath(path, paint);
+      
+      // Draw echo reflection indicators
+      _drawEchoReflection(canvas, size, delay, channelY, amplitude, echo);
+    }
+  }
+  
+  double _calculateFilterEffect(double normalizedPos) {
+    // Simulate high and low cut filters
+    double effect = 1.0;
+    
+    if (normalizedPos > highCut) {
+      effect *= (1.0 - (normalizedPos - highCut) * 2).clamp(0.0, 1.0);
+    }
+    
+    if (normalizedPos < lowCut) {
+      effect *= (normalizedPos / lowCut).clamp(0.0, 1.0);
+    }
+    
+    return effect;
+  }
+  
+  void _drawEchoReflection(Canvas canvas, Size size, double x, double y, double amplitude, int echoIndex) {
+    final reflectionPaint = Paint()
+      ..color = AppTheme.accentColor.withOpacity(amplitude * 0.4)
+      ..style = PaintingStyle.fill;
+    
+    final radius = 3.0 + amplitude * 5.0;
+    
+    // Draw reflection point
+    canvas.drawCircle(Offset(x, y), radius, reflectionPaint);
+    
+    // Draw ripple effect
+    for (int i = 1; i <= 3; i++) {
+      final ripplePaint = Paint()
+        ..color = AppTheme.accentColor.withOpacity(amplitude * 0.2 / i)
+        ..strokeWidth = 1.0
+        ..style = PaintingStyle.stroke;
+      
+      canvas.drawCircle(
+        Offset(x, y),
+        radius + (i * 8.0 * animationValue),
+        ripplePaint,
       );
     }
   }
 
-  void _drawThresholdLine(Canvas canvas, Size size) {
-    final y = size.height * (1 - threshold);
-    final paint = Paint()
-      ..color = AppTheme.errorColor
-      ..strokeWidth = 2
+  void _drawEnhancedModulation(Canvas canvas, Size size) {
+    if (modulation <= 0) return;
+
+    // Draw modulation LFO
+    final lfoPath = Path();
+    lfoPath.moveTo(0, size.height * 0.9);
+
+    for (int i = 0; i <= 100; i++) {
+      final x = (i / 100) * size.width;
+      final time = i * 0.1 + animationValue * 4 * pi;
+      final y = size.height * 0.9 + sin(time) * size.height * 0.05 * modulation;
+      lfoPath.lineTo(x, y);
+    }
+
+    final lfoPaint = Paint()
+      ..color = AppTheme.warningColor.withOpacity(modulation * 0.8)
+      ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
-    canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-  }
-
-  void _drawLabels(Canvas canvas, Size size) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: 'GR',
-        style: TextStyle(
-          color: AppTheme.textSecondary,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-    textPainter.paint(canvas, Offset(5, 5));
-  }
-
-  double _calculateGainReduction(double inputLevel) {
-    if (inputLevel < threshold) return 0.0;
+    canvas.drawPath(lfoPath, lfoPaint);
     
-    final overThreshold = inputLevel - threshold;
-    final compressedLevel = overThreshold / (1 + ratio * 9); // Convert ratio to compression factor
-    return (overThreshold - compressedLevel) / inputLevel;
+    // Draw modulation effect on delay time
+    _drawDelayModulation(canvas, size);
   }
-
-  Color _getBarColor(double gainReduction) {
-    if (gainReduction < 0.2) return AppTheme.successColor;
-    if (gainReduction < 0.5) return AppTheme.warningColor;
-    return AppTheme.errorColor;
+  
+  void _drawDelayModulation(Canvas canvas, Size size) {
+    final modulationAmount = modulation * 0.2;
+    final baseDelay = delayTime * size.width * 0.8;
+    
+    for (int i = 0; i < 5; i++) {
+      final time = animationValue * 2 * pi + i;
+      final modulatedDelay = baseDelay + sin(time) * modulationAmount * size.width;
+      
+      if (modulatedDelay > 0 && modulatedDelay < size.width) {
+        final modulationPaint = Paint()
+          ..color = AppTheme.warningColor.withOpacity(0.3)
+          ..strokeWidth = 1.0
+          ..style = PaintingStyle.stroke;
+        
+        canvas.drawLine(
+          Offset(modulatedDelay, 0),
+          Offset(modulatedDelay, size.height),
+          modulationPaint,
+        );
+      }
+    }
+  }
+  
+  void _drawParameterIndicators(Canvas canvas, Size size) {
+    // Draw parameter value bars at the bottom
+    final indicators = [
+      {'label': 'Delay', 'value': delayTime, 'color': AppTheme.accentColor, 'x': 0.1},
+      {'label': 'Feedback', 'value': feedback, 'color': AppTheme.warningColor, 'x': 0.3},
+      {'label': 'Mix', 'value': wetDryMix, 'color': AppTheme.successColor, 'x': 0.5},
+      {'label': 'Mod', 'value': modulation, 'color': AppTheme.errorColor, 'x': 0.7},
+      {'label': 'Spread', 'value': stereoSpread, 'color': AppTheme.accentColor, 'x': 0.9},
+    ];
+    
+    for (final indicator in indicators) {
+      final x = size.width * (indicator['x'] as double);
+      final value = indicator['value'] as double;
+      final color = indicator['color'] as Color;
+      final label = indicator['label'] as String;
+      
+      // Draw parameter bar
+      final barHeight = size.height * 0.06;
+      final barY = size.height * 0.02;
+      
+      // Background bar
+      final bgPaint = Paint()
+        ..color = AppTheme.borderColor.withOpacity(0.3)
+        ..style = PaintingStyle.fill;
+      
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x - 8, barY, 16, barHeight),
+          Radius.circular(2),
+        ),
+        bgPaint,
+      );
+      
+      // Value bar
+      final valuePaint = Paint()
+        ..color = color.withOpacity(0.8)
+        ..style = PaintingStyle.fill;
+      
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(x - 8, barY + barHeight * (1 - value), 16, barHeight * value),
+          Radius.circular(2),
+        ),
+        valuePaint,
+      );
+      
+      // Label
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: AppTheme.textSecondary,
+            fontSize: 7,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(x - textPainter.width / 2, barY + barHeight + 2),
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    if (oldDelegate is! EchoWaveformPainter) return true;
+    return oldDelegate.delayTime != delayTime ||
+           oldDelegate.feedback != feedback ||
+           oldDelegate.wetDryMix != wetDryMix ||
+           oldDelegate.modulation != modulation ||
+           oldDelegate.isBypassed != isBypassed ||
+           oldDelegate.animationValue != animationValue ||
+           oldDelegate.stereoSpread != stereoSpread ||
+           oldDelegate.pingPong != pingPong ||
+           oldDelegate.highCut != highCut ||
+           oldDelegate.lowCut != lowCut;
+  }
 }
 
-class CustomCompressionSliderThumb extends SliderComponentShape {
+class CustomEchoSliderThumb extends SliderComponentShape {
   final Color color;
   final double radius;
 
-  CustomCompressionSliderThumb(this.color, {this.radius = 12.0});
+  CustomEchoSliderThumb(this.color, {this.radius = 12.0});
 
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {

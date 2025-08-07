@@ -49,9 +49,11 @@ class _ProcessingProgressWidgetState extends State<ProcessingProgressWidget>
       curve: Curves.easeInOut,
     ));
 
+    // Validate and normalize progress value
+    final normalizedProgress = _validateProgress(widget.progress);
     _progressAnimation = Tween<double>(
       begin: 0.0,
-      end: widget.progress,
+      end: normalizedProgress,
     ).animate(CurvedAnimation(
       parent: _progressController,
       curve: Curves.easeOut,
@@ -64,9 +66,13 @@ class _ProcessingProgressWidgetState extends State<ProcessingProgressWidget>
   void didUpdateWidget(ProcessingProgressWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progress != widget.progress) {
+      // Validate and normalize both old and new progress values
+      final oldNormalizedProgress = _validateProgress(oldWidget.progress);
+      final newNormalizedProgress = _validateProgress(widget.progress);
+      
       _progressAnimation = Tween<double>(
-        begin: oldWidget.progress,
-        end: widget.progress,
+        begin: oldNormalizedProgress,
+        end: newNormalizedProgress,
       ).animate(CurvedAnimation(
         parent: _progressController,
         curve: Curves.easeOut,
@@ -81,6 +87,38 @@ class _ProcessingProgressWidgetState extends State<ProcessingProgressWidget>
     _waveController.dispose();
     _progressController.dispose();
     super.dispose();
+  }
+
+  /// Validates and normalizes progress value to prevent NaN errors
+  double _validateProgress(double progress) {
+    // Check for NaN, infinity, or null values
+    if (progress.isNaN || progress.isInfinite) {
+      return 0.0;
+    }
+    
+    // If progress is between 0-1 (decimal), convert to 0-100 (percentage)
+    if (progress >= 0.0 && progress <= 1.0) {
+      return progress * 100.0;
+    }
+    
+    // If progress is already in 0-100 range, clamp it
+    return progress.clamp(0.0, 100.0);
+  }
+
+  /// Gets the circular progress value (0.0 to 1.0) from percentage
+  double _getCircularProgressValue(double progressPercentage) {
+    if (progressPercentage.isNaN || progressPercentage.isInfinite) {
+      return 0.0;
+    }
+    return (progressPercentage / 100.0).clamp(0.0, 1.0);
+  }
+
+  /// Gets the display percentage as integer
+  int _getDisplayPercentage(double progressPercentage) {
+    if (progressPercentage.isNaN || progressPercentage.isInfinite) {
+      return 0;
+    }
+    return progressPercentage.clamp(0.0, 100.0).toInt();
   }
 
   @override
@@ -121,7 +159,7 @@ class _ProcessingProgressWidgetState extends State<ProcessingProgressWidget>
                 width: 55.w,
                 height: 55.w,
                 child: CircularProgressIndicator(
-                  value: _progressAnimation.value / 100,
+                  value: _getCircularProgressValue(_progressAnimation.value),
                   strokeWidth: 4.0,
                   backgroundColor: AppTheme.borderColor,
                   valueColor:
@@ -136,7 +174,7 @@ class _ProcessingProgressWidgetState extends State<ProcessingProgressWidget>
             animation: _progressAnimation,
             builder: (context, child) {
               return Text(
-                '${_progressAnimation.value.toInt()}%',
+                '${_getDisplayPercentage(_progressAnimation.value)}%',
                 style: AppTheme.darkTheme.textTheme.headlineSmall?.copyWith(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.w600,

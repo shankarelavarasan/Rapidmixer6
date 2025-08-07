@@ -131,9 +131,17 @@ class _AIProcessingState extends State<AIProcessing>
     // Listen to processing progress
     _processingService.progressStream.listen((progress) {
       if (mounted) {
+        // Validate progress to prevent NaN errors
+        double validatedProgress = progress;
+        if (progress.isNaN || progress.isInfinite) {
+          validatedProgress = 0.0;
+        } else {
+          validatedProgress = progress.clamp(0.0, 1.0);
+        }
+        
         setState(() {
-          _progress = progress;
-          _updateStageProgress(progress);
+          _progress = validatedProgress;
+          _updateStageProgress(validatedProgress);
         });
       }
     });
@@ -154,6 +162,14 @@ class _AIProcessingState extends State<AIProcessing>
   }
 
   void _updateStageProgress(double progress) {
+    // Validate progress to prevent NaN errors
+    if (progress.isNaN || progress.isInfinite) {
+      progress = 0.0;
+    }
+    
+    // Clamp progress to valid range
+    progress = progress.clamp(0.0, 1.0);
+    
     final stageIndex = (progress * _processingStages.length).floor();
 
     for (int i = 0; i < _processingStages.length; i++) {
