@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 import '../../../core/app_export.dart';
+import '../../../core/utils/math_utils.dart';
 
 class EchoControlsWidget extends StatefulWidget {
   final bool isBypassed;
@@ -1195,10 +1196,11 @@ class EchoWaveformPainter extends CustomPainter {
     for (int i = 0; i <= 100; i++) {
       final x = (i / 100) * size.width;
       final time = i * 0.1 + animationValue * 2 * pi;
+      final safeTime = MathUtils.validateAndClamp(time, 0.0, 1000.0);
       
       // Add stereo spread effect
       final spreadOffset = isLeftChannel ? -stereoSpread * 0.5 : stereoSpread * 0.5;
-      final y = centerY + sin(time + spreadOffset) * amplitude * (1.0 - wetDryMix * 0.3);
+      final y = centerY + sin(safeTime + spreadOffset) * amplitude * (1.0 - wetDryMix * 0.3);
       
       path.lineTo(x, y);
     }
@@ -1234,11 +1236,12 @@ class EchoWaveformPainter extends CustomPainter {
         if (x > size.width) break;
         
         final time = i * 0.2 + animationValue * 2 * pi;
+        final safeTime = MathUtils.validateAndClamp(time, 0.0, 1000.0);
         final echoAmplitude = amplitude * size.height * 0.1;
         
         // Apply frequency filtering to echo
         final filterEffect = _calculateFilterEffect(i / 50.0);
-        final y = channelY + sin(time) * echoAmplitude * filterEffect;
+        final y = channelY + sin(safeTime) * echoAmplitude * filterEffect;
         
         path.lineTo(x, y);
       }
@@ -1300,7 +1303,8 @@ class EchoWaveformPainter extends CustomPainter {
     for (int i = 0; i <= 100; i++) {
       final x = (i / 100) * size.width;
       final time = i * 0.1 + animationValue * 4 * pi;
-      final y = size.height * 0.9 + sin(time) * size.height * 0.05 * modulation;
+      final safeTime = MathUtils.validateAndClamp(time, 0.0, 1000.0);
+      final y = size.height * 0.9 + sin(safeTime) * size.height * 0.05 * modulation;
       lfoPath.lineTo(x, y);
     }
 
@@ -1321,7 +1325,8 @@ class EchoWaveformPainter extends CustomPainter {
     
     for (int i = 0; i < 5; i++) {
       final time = animationValue * 2 * pi + i;
-      final modulatedDelay = baseDelay + sin(time) * modulationAmount * size.width;
+      final safeTime = MathUtils.validateAndClamp(time, 0.0, 1000.0);
+      final modulatedDelay = baseDelay + sin(safeTime) * modulationAmount * size.width;
       
       if (modulatedDelay > 0 && modulatedDelay < size.width) {
         final modulationPaint = Paint()

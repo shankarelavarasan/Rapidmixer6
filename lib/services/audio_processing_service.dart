@@ -14,6 +14,7 @@ import 'cross_platform_service.dart';
 import 'multi_track_editor_service.dart';
 import 'professional_export_service.dart';
 import 'real_audio_processing_service.dart';
+import '../core/utils/math_utils.dart';
 
 class AudioProcessingService {
   static final AudioProcessingService _instance =
@@ -273,7 +274,7 @@ class AudioProcessingService {
           .searchBeats(
         query,
         category: category,
-        limit: limit ~/ 2,
+        limit: (limit.isNaN || limit <= 0) ? 10 : MathUtils.safeTruncatingDivision(limit.toDouble(), 2.0).clamp(1, limit),
       )
           .catchError((e) {
         _errorController.add('Online beat search failed: $e');

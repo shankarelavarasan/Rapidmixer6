@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/app_theme.dart';
+import '../../../core/utils/math_utils.dart';
 
 class AnimatedParticlesWidget extends StatefulWidget {
   const AnimatedParticlesWidget({super.key});
@@ -63,11 +64,11 @@ class Particle {
 
   Particle() {
     final random = math.Random();
-    x = random.nextDouble();
-    y = random.nextDouble();
-    size = random.nextDouble() * 3 + 1;
-    speed = random.nextDouble() * 0.02 + 0.01;
-    opacity = random.nextDouble() * 0.5 + 0.1;
+    x = MathUtils.validateAndClamp(random.nextDouble(), 0.0, 1.0);
+    y = MathUtils.validateAndClamp(random.nextDouble(), 0.0, 1.0);
+    size = MathUtils.validateAndClamp(random.nextDouble() * 3 + 1, 1.0, 4.0);
+    speed = MathUtils.validateAndClamp(random.nextDouble() * 0.02 + 0.01, 0.01, 0.03);
+    opacity = MathUtils.validateAndClamp(random.nextDouble() * 0.5 + 0.1, 0.1, 0.6);
     color = [
       AppTheme.accentColor,
       AppTheme.successColor,
@@ -89,9 +90,9 @@ class ParticlesPainter extends CustomPainter {
         ..color = particle.color.withValues(alpha: particle.opacity)
         ..style = PaintingStyle.fill;
 
-      final x = (particle.x + animation * particle.speed) % 1.0 * size.width;
-      final y =
-          (particle.y + animation * particle.speed * 0.5) % 1.0 * size.height;
+      final safeAnimation = MathUtils.validateAndClamp(animation, 0.0, 1.0);
+      final x = MathUtils.safeModulo(particle.x + safeAnimation * particle.speed, 1.0) * size.width;
+      final y = MathUtils.safeModulo(particle.y + safeAnimation * particle.speed * 0.5, 1.0) * size.height;
 
       canvas.drawCircle(
         Offset(x, y),

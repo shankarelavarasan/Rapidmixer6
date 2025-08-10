@@ -3,6 +3,7 @@ import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
 import '../../../theme/app_theme.dart';
+import '../../../core/utils/math_utils.dart';
 
 class ProcessingProgressWidget extends StatefulWidget {
   final double progress;
@@ -91,34 +92,17 @@ class _ProcessingProgressWidgetState extends State<ProcessingProgressWidget>
 
   /// Validates and normalizes progress value to prevent NaN errors
   double _validateProgress(double progress) {
-    // Check for NaN, infinity, or null values
-    if (progress.isNaN || progress.isInfinite) {
-      return 0.0;
-    }
-    
-    // If progress is between 0-1 (decimal), convert to 0-100 (percentage)
-    if (progress >= 0.0 && progress <= 1.0) {
-      return progress * 100.0;
-    }
-    
-    // If progress is already in 0-100 range, clamp it
-    return progress.clamp(0.0, 100.0);
+    return MathUtils.safeProgressCalculation(progress);
   }
 
   /// Gets the circular progress value (0.0 to 1.0) from percentage
   double _getCircularProgressValue(double progressPercentage) {
-    if (progressPercentage.isNaN || progressPercentage.isInfinite) {
-      return 0.0;
-    }
-    return (progressPercentage / 100.0).clamp(0.0, 1.0);
+    return MathUtils.safeDivision(progressPercentage, 100.0, 0.0).clamp(0.0, 1.0);
   }
 
   /// Gets the display percentage as integer
   int _getDisplayPercentage(double progressPercentage) {
-    if (progressPercentage.isNaN || progressPercentage.isInfinite) {
-      return 0;
-    }
-    return progressPercentage.clamp(0.0, 100.0).toInt();
+    return MathUtils.validateAndClamp(progressPercentage, 0.0, 100.0).toInt();
   }
 
   @override
@@ -207,7 +191,7 @@ class WaveformPainter extends CustomPainter {
 
     for (int i = 0; i < waveCount; i++) {
       final x = (size.width / waveCount) * i;
-      final amplitude = (i % 2 == 0 ? 20 : 15) * (0.5 + 0.5 * animation);
+      final amplitude = (i % 2 == 0 ? 20 : 15) * MathUtils.validateAndClamp((0.5 + 0.5 * animation), 0.0, 1.0);
       final y = centerY + amplitude * (i % 2 == 0 ? 1 : -1);
 
       if (i == 0) {

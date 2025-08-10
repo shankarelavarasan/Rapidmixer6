@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
+import '../core/utils/math_utils.dart';
 
 class BeatLibraryService {
   static final BeatLibraryService _instance = BeatLibraryService._internal();
@@ -233,14 +234,17 @@ class BeatLibraryService {
     
     // Create a simple drum pattern
     final audioData = List<double>.filled(samples, 0.0);
-    final beatInterval = (60.0 / bpm) * sampleRate; // Samples per beat
+    final safeBpm = bpm > 0 ? bpm : 120; // Prevent division by zero
+    final beatInterval = (60.0 / safeBpm) * sampleRate; // Samples per beat
     
     for (int i = 0; i < samples; i++) {
       final beatPosition = i % beatInterval.round();
       if (beatPosition < 1000) { // Kick drum
-        audioData[i] = 0.5 * sin(2 * pi * 60 * i / sampleRate);
+        final sineValue = MathUtils.safeSin(2 * pi * 60 * i / sampleRate);
+        audioData[i] = sineValue.isFinite ? 0.5 * sineValue : 0.0;
       } else if (beatPosition > beatInterval / 2 && beatPosition < beatInterval / 2 + 500) { // Snare
-        audioData[i] = 0.3 * (Random().nextDouble() - 0.5); // Noise for snare
+        final noiseValue = 0.3 * (Random().nextDouble() - 0.5);
+        audioData[i] = noiseValue.isFinite ? noiseValue : 0.0; // Noise for snare
       }
     }
     
@@ -268,7 +272,8 @@ class BeatLibraryService {
   }
 
   String _buildFFmpegCommand(String genre, int bpm, int duration, String outputPath) {
-    final beatInterval = 60.0 / bpm;
+    final safeBpm = bpm > 0 ? bpm : 120; // Prevent division by zero
+    final beatInterval = 60.0 / safeBpm;
     
     switch (genre.toLowerCase()) {
       case 'hip-hop':

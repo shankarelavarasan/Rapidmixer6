@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter/return_code.dart';
+import '../core/utils/math_utils.dart';
 
 class AdvancedMixingService {
   static final AdvancedMixingService _instance = AdvancedMixingService._internal();
@@ -562,31 +563,58 @@ class AdvancedMixingService {
       // Create a copy to avoid concurrent modification
       final updatedData = Map<String, dynamic>.from(_analysisData);
       
-      // Simulate spectrum analysis
+      // Simulate spectrum analysis with validation
       final spectrum = List<double>.from(updatedData['spectrum'] as List);
       for (int i = 0; i < spectrum.length; i++) {
-        final frequency = i * 22050 / spectrum.length;
-        final amplitude = _generateSpectrumValue(frequency, random);
-        spectrum[i] = amplitude;
+        final frequency = spectrum.length > 0 ? (i * 22050.0) / spectrum.length : 0.0;
+        if (!frequency.isNaN && !frequency.isInfinite) {
+          final amplitude = _generateSpectrumValue(frequency, random);
+          if (!amplitude.isNaN && !amplitude.isInfinite) {
+            spectrum[i] = amplitude;
+          }
+        }
       }
       updatedData['spectrum'] = spectrum;
       
-      // Update other analysis parameters with bounds checking
-      updatedData['peakFrequency'] = (440.0 + random.nextDouble() * 2000).clamp(20.0, 20000.0);
-      updatedData['spectralCentroid'] = (1000.0 + random.nextDouble() * 3000).clamp(100.0, 10000.0);
-      updatedData['spectralRolloff'] = (8000.0 + random.nextDouble() * 4000).clamp(1000.0, 20000.0);
-      updatedData['lufs'] = (-23.0 + random.nextDouble() * 10).clamp(-60.0, 0.0);
-      updatedData['truePeak'] = (-6.0 + random.nextDouble() * 5).clamp(-20.0, 0.0);
-      updatedData['dynamicRange'] = (8.0 + random.nextDouble() * 8).clamp(1.0, 30.0);
-      updatedData['stereoWidth'] = (0.8 + random.nextDouble() * 0.4).clamp(0.0, 2.0);
-      updatedData['phaseCorrelation'] = (0.7 + random.nextDouble() * 0.3).clamp(-1.0, 1.0);
+      // Update other analysis parameters with bounds checking and NaN validation
+      final peakFreq = 440.0 + random.nextDouble() * 2000;
+      updatedData['peakFrequency'] = peakFreq.isNaN || peakFreq.isInfinite ? 440.0 : peakFreq.clamp(20.0, 20000.0);
       
-      // Update tonal balance
+      final spectralCent = 1000.0 + random.nextDouble() * 3000;
+      updatedData['spectralCentroid'] = spectralCent.isNaN || spectralCent.isInfinite ? 1000.0 : spectralCent.clamp(100.0, 10000.0);
+      
+      final spectralRoll = 8000.0 + random.nextDouble() * 4000;
+      updatedData['spectralRolloff'] = spectralRoll.isNaN || spectralRoll.isInfinite ? 8000.0 : spectralRoll.clamp(1000.0, 20000.0);
+      
+      final lufsValue = -23.0 + random.nextDouble() * 10;
+      updatedData['lufs'] = lufsValue.isNaN || lufsValue.isInfinite ? -23.0 : lufsValue.clamp(-60.0, 0.0);
+      
+      final truePeakValue = -6.0 + random.nextDouble() * 5;
+      updatedData['truePeak'] = truePeakValue.isNaN || truePeakValue.isInfinite ? -6.0 : truePeakValue.clamp(-20.0, 0.0);
+      
+      final dynamicRangeValue = 8.0 + random.nextDouble() * 8;
+      updatedData['dynamicRange'] = dynamicRangeValue.isNaN || dynamicRangeValue.isInfinite ? 8.0 : dynamicRangeValue.clamp(1.0, 30.0);
+      
+      final stereoWidthValue = 0.8 + random.nextDouble() * 0.4;
+      updatedData['stereoWidth'] = stereoWidthValue.isNaN || stereoWidthValue.isInfinite ? 0.8 : stereoWidthValue.clamp(0.0, 2.0);
+      
+      final phaseCorr = 0.7 + random.nextDouble() * 0.3;
+      updatedData['phaseCorrelation'] = phaseCorr.isNaN || phaseCorr.isInfinite ? 0.7 : phaseCorr.clamp(-1.0, 1.0);
+      
+      // Update tonal balance with NaN validation
       final tonalBalance = Map<String, dynamic>.from(updatedData['tonalBalance'] as Map<String, dynamic>);
-      tonalBalance['bass'] = (-3.0 + random.nextDouble() * 6).clamp(-12.0, 12.0);
-      tonalBalance['lowMid'] = (-2.0 + random.nextDouble() * 4).clamp(-12.0, 12.0);
-      tonalBalance['highMid'] = (-1.0 + random.nextDouble() * 3).clamp(-12.0, 12.0);
-      tonalBalance['treble'] = (-2.0 + random.nextDouble() * 4).clamp(-12.0, 12.0);
+      
+      final bassValue = -3.0 + random.nextDouble() * 6;
+      tonalBalance['bass'] = bassValue.isNaN || bassValue.isInfinite ? -3.0 : bassValue.clamp(-12.0, 12.0);
+      
+      final lowMidValue = -2.0 + random.nextDouble() * 4;
+      tonalBalance['lowMid'] = lowMidValue.isNaN || lowMidValue.isInfinite ? -2.0 : lowMidValue.clamp(-12.0, 12.0);
+      
+      final highMidValue = -1.0 + random.nextDouble() * 3;
+      tonalBalance['highMid'] = highMidValue.isNaN || highMidValue.isInfinite ? -1.0 : highMidValue.clamp(-12.0, 12.0);
+      
+      final trebleValue = -2.0 + random.nextDouble() * 4;
+      tonalBalance['treble'] = trebleValue.isNaN || trebleValue.isInfinite ? -2.0 : trebleValue.clamp(-12.0, 12.0);
       updatedData['tonalBalance'] = tonalBalance;
       
       // Update the main data and notify listeners

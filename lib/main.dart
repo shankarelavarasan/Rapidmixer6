@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'services/api_integration_service.dart';
+import 'services/pwa_service.dart';
 import 'routes/app_routes.dart';
 import 'core/utils/glassmorphism_utils.dart';
 import 'core/utils/animation_utils.dart';
 import 'core/utils/responsive_utils.dart';
 import 'theme/app_theme.dart';
+import 'widgets/pwa_install_widget.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize PWA service
+  PWAService.initialize();
+  
+  // Test backend connection on app start
+  final apiService = ApiIntegrationService();
+  print('Testing backend connection...');
+  final isConnected = await apiService.testBackendConnection();
+  print('Backend connection status: $isConnected');
+  
   runApp(MyApp());
 }
 
@@ -283,6 +296,10 @@ class _RapidMixerHomePageState extends State<RapidMixerHomePage>
                          ),
                        ),
                      ),
+                     SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, 20)),
+                     
+                     // PWA Install Widget
+                     PWAInstallWidget(type: PWAInstallType.card),
                    ],
                  ),
                ),
@@ -290,6 +307,8 @@ class _RapidMixerHomePageState extends State<RapidMixerHomePage>
            ),
          ),
        ),
+       // PWA Install Floating Button
+       floatingActionButton: PWAInstallWidget(type: PWAInstallType.floatingButton),
      );
   }
   

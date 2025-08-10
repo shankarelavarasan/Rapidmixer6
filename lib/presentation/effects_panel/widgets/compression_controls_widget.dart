@@ -1085,11 +1085,15 @@ class GainReductionMeterPainter extends CustomPainter {
   }
 
   double _calculateGainReduction(double inputLevel) {
-    if (inputLevel < threshold) return 0.0;
+    if (inputLevel < threshold || inputLevel <= 0.0) return 0.0;
     
     final overThreshold = inputLevel - threshold;
-    final compressedLevel = overThreshold / (1 + ratio * 9); // Convert ratio to compression factor
-    return (overThreshold - compressedLevel) / inputLevel;
+    final safeRatio = ratio.isFinite ? ratio.clamp(0.0, 20.0) : 1.0;
+    final compressionFactor = 1 + safeRatio * 9;
+    final compressedLevel = compressionFactor > 0 ? overThreshold / compressionFactor : 0.0;
+    final gainReduction = (overThreshold - compressedLevel) / inputLevel;
+    
+    return gainReduction.isFinite ? gainReduction.clamp(0.0, 1.0) : 0.0;
   }
 
   Color _getBarColor(double gainReduction) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../core/utils/math_utils.dart';
 
 class ExportProgressDialog extends StatelessWidget {
   final double progress;
@@ -130,7 +131,7 @@ class ExportProgressDialog extends StatelessWidget {
           ),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
-            widthFactor: progress,
+            widthFactor: MathUtils.validateAndClamp(progress, 0.0, 1.0),
             child: Container(
               decoration: BoxDecoration(
                 color: AppTheme.accentColor,
@@ -142,7 +143,7 @@ class ExportProgressDialog extends StatelessWidget {
         SizedBox(height: 2.h),
         // Progress percentage
         Text(
-          '${(progress * 100).toInt()}%',
+          '${MathUtils.validateAndClamp(progress * 100, 0.0, 100.0).toInt()}%',
           style: AppTheme.darkTheme.textTheme.headlineSmall?.copyWith(
             color: AppTheme.accentColor,
             fontWeight: FontWeight.w600,

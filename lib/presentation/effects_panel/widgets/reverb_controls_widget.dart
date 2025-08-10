@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:math';
 
 import '../../../core/app_export.dart';
+import '../../../core/utils/math_utils.dart';
 
 class ReverbControlsWidget extends StatefulWidget {
   final Function(String parameter, double value) onReverbChange;
@@ -138,13 +139,21 @@ class _ReverbControlsWidgetState extends State<ReverbControlsWidget>
     for (int i = 0; i < length; i++) {
       final normalizedTime = i / length;
       
+      // Validate parameters to prevent NaN
+      final safeDecayTime = _decayTime.isFinite ? _decayTime.clamp(0.0, 1.0) : 0.3;
+      final safeDamping = _damping.isFinite ? _damping.clamp(0.0, 1.0) : 0.4;
+      final safeDiffusion = _diffusion.isFinite ? _diffusion.clamp(0.0, 1.0) : 0.7;
+      final safeRoomSize = _roomSize.isFinite ? _roomSize.clamp(0.0, 1.0) : 0.5;
+      
       // Generate impulse response based on current parameters
-      final decay = exp(-normalizedTime * (_decayTime * 10) * (1 + _damping));
-      final diffusionNoise = (random.nextDouble() - 0.5) * _diffusion * 0.4;
-      final roomReflection = sin(normalizedTime * pi * _roomSize * 4) * 0.3;
+      final decayFactor = -normalizedTime * (safeDecayTime * 10) * (1 + safeDamping);
+      final decay = decayFactor.isFinite ? exp(decayFactor) : 0.0;
+      final diffusionNoise = (random.nextDouble() - 0.5) * safeDiffusion * 0.4;
+      final roomReflection = sin(normalizedTime * pi * safeRoomSize * 4) * 0.3;
       
       final amplitude = decay * (1.0 + diffusionNoise + roomReflection);
-      newResponse.add(amplitude.clamp(-1.0, 1.0));
+      final safeAmplitude = amplitude.isFinite ? amplitude.clamp(-1.0, 1.0) : 0.0;
+      newResponse.add(safeAmplitude);
     }
     
     if (mounted) {
@@ -1445,21 +1454,44 @@ class EnhancedReverbVisualizationPainter extends CustomPainter {
     final sourceY = centerY;
     
     // Draw reflection paths based on room size and diffusion
-    final pathCount = (roomSize * 8).round();
+    // Add validation to prevent division by zero and NaN values
+    final rawPathCount = (roomSize * 8).round();
+    final pathCount = rawPathCount > 0 ? rawPathCount : 1; // Ensure minimum of 1 to prevent division by zero
+    
+    // Validate roomSize to prevent NaN calculations
+    final validRoomSize = roomSize.isNaN || roomSize.isInfinite ? 0.5 : roomSize.clamp(0.1, 1.0);
     
     for (int i = 0; i < pathCount; i++) {
-      final angle = (i / pathCount) * 2 * pi;
-      final distance = roomSize * size.width * 0.3;
+      // Safe angle calculation with validation using MathUtils
+      final angle = MathUtils.safeAngleCalculation(i.toDouble(), pathCount.toDouble());
       
-      final endX = sourceX + cos(angle) * distance;
-      final endY = sourceY + sin(angle) * distance * 0.6; // Flatten for perspective
+      // Validate angle to prevent NaN in trigonometric functions
+      if (angle.isNaN || angle.isInfinite) continue;
       
-      // Add some randomness based on diffusion
-      final diffusionOffset = (Random(i).nextDouble() - 0.5) * diffusion * 20;
+      final distance = validRoomSize * size.width * 0.3;
+      
+      final cosValue = MathUtils.safeCos(angle);
+      final sinValue = MathUtils.safeSin(angle);
+      
+      // Validate trigonometric results
+      if (cosValue.isNaN || cosValue.isInfinite || sinValue.isNaN || sinValue.isInfinite) continue;
+      
+      final endX = sourceX + cosValue * distance;
+      final endY = sourceY + sinValue * distance * 0.6; // Flatten for perspective
+      
+      // Add some randomness based on diffusion with validation
+      final validDiffusion = diffusion.isNaN || diffusion.isInfinite ? 0.5 : diffusion.clamp(0.0, 1.0);
+      final diffusionOffset = (Random(i).nextDouble() - 0.5) * validDiffusion * 20;
+      
+      // Validate final coordinates
+      final finalEndX = endX + diffusionOffset;
+      final finalEndY = endY;
+      
+      if (finalEndX.isNaN || finalEndX.isInfinite || finalEndY.isNaN || finalEndY.isInfinite) continue;
       
       canvas.drawLine(
         Offset(sourceX, sourceY),
-        Offset(endX + diffusionOffset, endY),
+        Offset(finalEndX, finalEndY),
         reflectionPaint,
       );
     }

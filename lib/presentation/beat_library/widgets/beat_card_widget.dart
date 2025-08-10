@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import '../../../core/app_export.dart';
+import '../../../core/utils/math_utils.dart';
 
 class BeatCardWidget extends StatefulWidget {
   final Map<String, dynamic> beatData;
@@ -77,7 +78,7 @@ class _BeatCardWidgetState extends State<BeatCardWidget>
         animation: _scaleAnimation,
         builder: (context, child) {
           return Transform.scale(
-            scale: _scaleAnimation.value,
+            scale: MathUtils.validateAndClamp(_scaleAnimation.value, 0.5, 1.5),
             child: Container(
               margin: EdgeInsets.symmetric(horizontal: 2.w, vertical: 1.h),
               decoration: BoxDecoration(
@@ -225,8 +226,9 @@ class _BeatCardWidgetState extends State<BeatCardWidget>
 
   List<double> _generateMockWaveform() {
     return List.generate(50, (index) {
-      return (index % 3 == 0 ? 0.8 : (index % 2 == 0 ? 0.6 : 0.4)) *
-          (1 + (index % 7) * 0.1);
+      final baseValue = index % 3 == 0 ? 0.8 : (index % 2 == 0 ? 0.6 : 0.4);
+      final modifier = 1 + (index % 7) * 0.1;
+      return MathUtils.validateAndClamp(baseValue * modifier, 0.0, 1.0);
     });
   }
 }
@@ -259,12 +261,14 @@ class WaveformPainter extends CustomPainter {
 
     for (int i = 0; i < waveformData.length; i++) {
       final x = i * barWidth + barWidth / 2;
-      final barHeight = waveformData[i] * size.height * 0.8;
-      final startY = centerY - barHeight / 2;
-      final endY = centerY + barHeight / 2;
+      final safeWaveformValue = MathUtils.validateAndClamp(waveformData[i], 0.0, 1.0);
+      final barHeight = safeWaveformValue * size.height * 0.8;
+      final startY = centerY - MathUtils.safeDivision(barHeight, 2.0, 0.0);
+      final endY = centerY + MathUtils.safeDivision(barHeight, 2.0, 0.0);
 
       // Use active paint for first 30% if playing
-      final useActivePaint = isPlaying && i < waveformData.length * 0.3;
+      final activeThreshold = MathUtils.validateAndClamp(waveformData.length * 0.3, 0.0, waveformData.length.toDouble());
+      final useActivePaint = isPlaying && i < activeThreshold;
 
       canvas.drawLine(
         Offset(x, startY),

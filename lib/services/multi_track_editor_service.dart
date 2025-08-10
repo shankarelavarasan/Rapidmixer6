@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter/return_code.dart';
+import '../core/utils/math_utils.dart';
 
 class MultiTrackEditorService {
   static final MultiTrackEditorService _instance = MultiTrackEditorService._internal();
@@ -599,30 +600,49 @@ class MultiTrackEditorService {
         return;
       }
       
-      _playbackState['currentTime'] += 0.1;
-      _playbackState['playheadPosition'] = _playbackState['currentTime'];
+      final newTime = (_playbackState['currentTime'] as double) + 0.1;
+      if (!newTime.isNaN && !newTime.isInfinite) {
+        _playbackState['currentTime'] = newTime;
+        _playbackState['playheadPosition'] = newTime;
+      }
       
       // Update track levels (simulate audio analysis)
       for (var track in _tracks) {
         if (!track['isMuted']) {
-          // In the _startPlaybackSimulation method, change:
-          track['level'] = math.Random().nextDouble() * 0.8;
-          track['peakLevel'] = math.max(track['peakLevel'] as double, track['level'] as double);
-          track['rmsLevel'] = track['level'] * 0.7;
+          // Generate level with validation
+          final newLevel = math.Random().nextDouble() * 0.8;
+          if (!newLevel.isNaN && !newLevel.isInfinite) {
+            track['level'] = newLevel;
+            final currentPeak = track['peakLevel'] as double;
+            final maxLevel = math.max(currentPeak.isNaN || currentPeak.isInfinite ? 0.0 : currentPeak, newLevel);
+            track['peakLevel'] = maxLevel.isNaN || maxLevel.isInfinite ? 0.0 : maxLevel;
+            final rmsLevel = newLevel * 0.7;
+            track['rmsLevel'] = rmsLevel.isNaN || rmsLevel.isInfinite ? 0.0 : rmsLevel;
+          }
         } else {
           track['level'] = 0.0;
         }
       }
       
-      // Loop handling
+      // Loop handling with validation
+      final currentTime = _playbackState['currentTime'] as double;
+      final loopEnd = _playbackState['loopEnd'] as double;
+      final loopStart = _playbackState['loopStart'] as double;
+      
       if (_playbackState['loopEnabled'] && 
-          _playbackState['currentTime'] >= _playbackState['loopEnd']) {
-        _playbackState['currentTime'] = _playbackState['loopStart'];
-        _playbackState['playheadPosition'] = _playbackState['loopStart'];
+          !currentTime.isNaN && !currentTime.isInfinite &&
+          !loopEnd.isNaN && !loopEnd.isInfinite &&
+          !loopStart.isNaN && !loopStart.isInfinite &&
+          currentTime >= loopEnd) {
+        _playbackState['currentTime'] = loopStart;
+        _playbackState['playheadPosition'] = loopStart;
       }
       
-      // Stop at end
-      if (_playbackState['currentTime'] >= _playbackState['totalDuration']) {
+      // Stop at end with validation
+      final totalDuration = _playbackState['totalDuration'] as double;
+      if (!currentTime.isNaN && !currentTime.isInfinite &&
+          !totalDuration.isNaN && !totalDuration.isInfinite &&
+          currentTime >= totalDuration) {
         _playbackState['isPlaying'] = false;
         _playbackState['currentTime'] = 0.0;
         _playbackState['playheadPosition'] = 0.0;
@@ -716,15 +736,8 @@ class MultiTrackEditorService {
   }
 }
 
-// Helper function for power calculation
+// Helper function for power calculation with NaN validation
 double pow(double base, double exponent) {
-  if (exponent == 0) return 1;
-  if (exponent == 1) return base;
-  
-  double result = 1;
-  for (int i = 0; i < exponent.abs(); i++) {
-    result *= base;
-  }
-  
-  return exponent < 0 ? 1 / result : result;
+  // Use MathUtils.safePow for better NaN handling
+  return MathUtils.safePow(base, exponent);
 }

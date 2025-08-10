@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
+import 'math_utils.dart';
 
 /// Utility class for creating smooth animated transitions throughout the application
 class AnimationUtils {
@@ -237,7 +238,7 @@ class AnimationUtils {
     return AnimatedBuilder(
       animation: animation,
       builder: (context, _) {
-        final offset = math.sin(animation.value * 2 * math.pi * frequency) * amplitude;
+        final offset = MathUtils.safeSin(animation.value * 2 * math.pi * frequency) * amplitude;
         return Transform.translate(
           offset: Offset(0, offset),
           child: child,
@@ -258,7 +259,7 @@ class AnimationUtils {
       animation: animation,
       builder: (context, _) {
         final scale = minScale + (maxScale - minScale) * 
-            (0.5 + 0.5 * math.sin(animation.value * 2 * math.pi));
+            (0.5 + 0.5 * MathUtils.safeSin(animation.value * 2 * math.pi));
         return Transform.scale(
           scale: scale,
           child: child,

@@ -9,6 +9,7 @@ import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter/return_code.dart';
 import 'package:ffmpeg_kit_flutter/session.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../core/utils/math_utils.dart';
 
 class ProfessionalExportService {
   static final ProfessionalExportService _instance = ProfessionalExportService._internal();
@@ -163,10 +164,15 @@ class ProfessionalExportService {
           _parseFFmpegProgress(log.getMessage());
         },
         (statistics) {
-          // Update progress based on statistics
-          if (statistics.getTime() > 0) {
-            final progress = 0.5 + (statistics.getTime() / 1000.0 / 180.0) * 0.4; // Assume 3min max
-            _progressController.add(progress.clamp(0.5, 0.9));
+          // Update progress based on statistics with validation
+          final time = statistics.getTime();
+          if (time > 0 && !time.isNaN && !time.isInfinite) {
+            final timeInSeconds = MathUtils.safeDivision(time.toDouble(), 1000.0);
+            final normalizedTime = MathUtils.safeDivision(timeInSeconds, 180.0); // Assume 3min max
+            final progress = 0.5 + (normalizedTime * 0.4);
+            if (!progress.isNaN && !progress.isInfinite) {
+              _progressController.add(progress.clamp(0.5, 0.9));
+            }
           }
         },
       );
@@ -215,7 +221,10 @@ class ProfessionalExportService {
           final track = tracks[i];
           if (!track['isMuted'] && track['stemPath'] != null) {
             _statusController.add('Processing ${track['name']}...');
-            _progressController.add(0.2 + (i / tracks.length) * 0.4);
+            final trackProgress = MathUtils.safeDivision(i.toDouble(), tracks.length.toDouble()) * 0.4;
+            if (!trackProgress.isNaN && !trackProgress.isInfinite) {
+              _progressController.add(0.2 + trackProgress);
+            }
             
             // Apply track-specific processing
             await _processTrackWeb(track);
@@ -286,41 +295,68 @@ class ProfessionalExportService {
       command += ' -t ${endTime - startTime}';
     }
 
-    // Master volume
-    if (masterVolume != 1.0) {
-      filters.add('volume=$masterVolume');
+    // Master volume with validation
+    if (masterVolume != 1.0 && !masterVolume.isNaN && !masterVolume.isInfinite && masterVolume >= 0) {
+      final validVolume = masterVolume.clamp(0.0, 10.0);
+      filters.add('volume=$validVolume');
     }
 
-    // Pitch shifting
-    if (masterPitch != 0.0) {
+    // Pitch shifting with NaN validation
+    if (masterPitch != 0.0 && !masterPitch.isNaN && !masterPitch.isInfinite) {
       final semitones = masterPitch * 12; // Convert to semitones
-      filters.add('asetrate=${sampleRate * pow(2, semitones / 12)},aresample=$sampleRate');
+      if (!semitones.isNaN && !semitones.isInfinite) {
+        final pitchMultiplier = MathUtils.safePow(2, MathUtils.safeDivision(semitones, 12));
+        if (!pitchMultiplier.isNaN && !pitchMultiplier.isInfinite) {
+          final newSampleRate = sampleRate * pitchMultiplier;
+          if (!newSampleRate.isNaN && !newSampleRate.isInfinite && newSampleRate > 0) {
+            filters.add('asetrate=${newSampleRate.round()},aresample=$sampleRate');
+          }
+        }
+      }
     }
 
-    // Speed/tempo change
-    if (masterSpeed != 1.0) {
-      filters.add('atempo=$masterSpeed');
+    // Speed/tempo change with validation
+    if (masterSpeed != 1.0 && !masterSpeed.isNaN && !masterSpeed.isInfinite && masterSpeed > 0) {
+      final validSpeed = masterSpeed.clamp(0.5, 2.0); // FFmpeg atempo limits
+      filters.add('atempo=$validSpeed');
     }
 
-    // EQ (3-band)
+    // EQ (3-band) with validation
     if (masterEQ != null) {
       final low = masterEQ['low'] ?? 0.0;
       final mid = masterEQ['mid'] ?? 0.0;
       final high = masterEQ['high'] ?? 0.0;
       
-      if (low != 0.0) filters.add('equalizer=f=100:width_type=h:width=50:g=$low');
-      if (mid != 0.0) filters.add('equalizer=f=1000:width_type=h:width=100:g=$mid');
-      if (high != 0.0) filters.add('equalizer=f=10000:width_type=h:width=1000:g=$high');
+      if (low != 0.0 && !low.isNaN && !low.isInfinite) {
+        final validLow = low.clamp(-20.0, 20.0);
+        filters.add('equalizer=f=100:width_type=h:width=50:g=$validLow');
+      }
+      if (mid != 0.0 && !mid.isNaN && !mid.isInfinite) {
+        final validMid = mid.clamp(-20.0, 20.0);
+        filters.add('equalizer=f=1000:width_type=h:width=100:g=$validMid');
+      }
+      if (high != 0.0 && !high.isNaN && !high.isInfinite) {
+        final validHigh = high.clamp(-20.0, 20.0);
+        filters.add('equalizer=f=10000:width_type=h:width=1000:g=$validHigh');
+      }
     }
 
-    // Reverb
-    if (masterReverb > 0.0) {
-      filters.add('aecho=0.8:0.9:${(masterReverb * 1000).round()}:$masterReverb');
+    // Reverb with validation
+    if (masterReverb > 0.0 && !masterReverb.isNaN && !masterReverb.isInfinite) {
+      final validReverb = masterReverb.clamp(0.0, 1.0);
+      final reverbDelay = MathUtils.safeTruncatingDivision(validReverb * 1000, 1.0).round();
+      if (reverbDelay > 0) {
+        filters.add('aecho=0.8:0.9:$reverbDelay:$validReverb');
+      }
     }
 
-    // Echo/Delay
-    if (masterEcho > 0.0) {
-      filters.add('aecho=0.8:0.88:${(masterEcho * 500).round()}:$masterEcho');
+    // Echo/Delay with validation
+    if (masterEcho > 0.0 && !masterEcho.isNaN && !masterEcho.isInfinite) {
+      final validEcho = masterEcho.clamp(0.0, 1.0);
+      final echoDelay = MathUtils.safeTruncatingDivision(validEcho * 500, 1.0).round();
+      if (echoDelay > 0) {
+        filters.add('aecho=0.8:0.88:$echoDelay:$validEcho');
+      }
     }
 
     // Limiter
@@ -413,7 +449,10 @@ class ProfessionalExportService {
         final inputPath = stemPaths[stemType]!;
         
         _statusController.add('Exporting $stemType stem...');
-        _progressController.add(i / stemTypes.length);
+        final stemProgress = MathUtils.safeDivision(i.toDouble(), stemTypes.length.toDouble());
+        if (!stemProgress.isNaN && !stemProgress.isInfinite) {
+          _progressController.add(stemProgress);
+        }
 
         final outputPath = '${exportsDir.path}/${stemType}_stem.$outputFormat';
         
@@ -501,7 +540,7 @@ class ProfessionalExportService {
         final hours = int.parse(timeMatch.group(1)!);
         final minutes = int.parse(timeMatch.group(2)!);
         final seconds = int.parse(timeMatch.group(3)!);
-        final totalSeconds = hours * 3600 + minutes * 60 + seconds;
+        final totalSeconds = MathUtils.safeTruncatingDivision((hours * 3600 + minutes * 60 + seconds).toDouble(), 1.0).round();
         
         // Update status with current time
         _statusController.add('Processing... ${timeMatch.group(0)!.substring(5)}');
@@ -562,15 +601,8 @@ class ProfessionalExportService {
   }
 }
 
-// Helper function for power calculation
+// Helper function for power calculation with NaN validation
 double pow(double base, double exponent) {
-  if (exponent == 0) return 1;
-  if (exponent == 1) return base;
-  
-  double result = 1;
-  for (int i = 0; i < exponent.abs(); i++) {
-    result *= base;
-  }
-  
-  return exponent < 0 ? 1 / result : result;
+  // Use MathUtils.safePow for better NaN handling
+  return MathUtils.safePow(base, exponent);
 }

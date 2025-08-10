@@ -381,11 +381,12 @@ class _DelayControlsWidgetState extends State<DelayControlsWidget>
         intervals.add(_tapTimes[i].difference(_tapTimes[i - 1]).inMilliseconds);
       }
 
-      final averageInterval =
-          intervals.reduce((a, b) => a + b) / intervals.length;
-      final bpm = 60000 / averageInterval;
+      final averageInterval = intervals.isNotEmpty
+          ? intervals.reduce((a, b) => a + b) / intervals.length
+          : 500.0; // Default 500ms interval
+      final bpm = averageInterval > 0 ? 60000 / averageInterval : 120.0;
 
-      if (bpm >= 60 && bpm <= 200) {
+      if (bpm.isFinite && bpm >= 60 && bpm <= 200) {
         setState(() {
           _currentBpm = bpm;
         });
@@ -397,9 +398,10 @@ class _DelayControlsWidgetState extends State<DelayControlsWidget>
   }
 
   void _syncToTempo() {
-    final beatDuration = 60.0 / _currentBpm;
+    final safeBpm = _currentBpm > 0 && _currentBpm.isFinite ? _currentBpm : 120.0;
+    final beatDuration = 60.0 / safeBpm;
     setState(() {
-      _delayTime = beatDuration / 4; // Quarter note delay
+      _delayTime = (beatDuration / 4).clamp(0.01, 2.0); // Quarter note delay, clamped
     });
     widget.onDelayChange('delayTime', _delayTime);
   }

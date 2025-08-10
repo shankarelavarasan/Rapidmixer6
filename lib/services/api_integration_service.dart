@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import '../core/utils/math_utils.dart';
 
 class ApiIntegrationService {
   static final ApiIntegrationService _instance = ApiIntegrationService._internal();
@@ -688,15 +689,19 @@ class ApiIntegrationService {
       // Try multiple sources
       final results = <Map<String, dynamic>>[];
       
+      // Validate limit to prevent division by zero or NaN
+      final validLimit = (limit.isNaN || limit <= 0) ? 20 : limit;
+      final halfLimit = MathUtils.safeTruncatingDivision(validLimit.toDouble(), 2.0).clamp(1, validLimit);
+      
       // Freesound
       if (_apiConfigs['freesound']!['status'] == 'active') {
-        final freesoundResults = await _searchFreesound(query, limit ~/ 2);
+        final freesoundResults = await _searchFreesound(query, halfLimit);
         results.addAll(freesoundResults);
       }
       
       // Zapsplat
       if (_apiConfigs['zapsplat']!['status'] == 'active') {
-        final zapsplatResults = await _searchZapsplat(query, limit ~/ 2);
+        final zapsplatResults = await _searchZapsplat(query, halfLimit);
         results.addAll(zapsplatResults);
       }
       

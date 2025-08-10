@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../core/utils/glassmorphism_utils.dart';
 import '../../theme/app_theme.dart';
+import '../../core/utils/math_utils.dart';
 
 class EQControlsWidget extends StatefulWidget {
   final Function(String, double)? onParameterChanged;
@@ -91,35 +92,55 @@ class _EQControlsWidgetState extends State<EQControlsWidget>
       case EQBandType.bell:
         final q = band.q;
         final gain = band.gain;
-        final w = 2 * math.pi * frequency;
-        final w0 = 2 * math.pi * band.frequency;
-        final alpha = math.sin(w0) / (2 * q);
+        final w = MathUtils.safeDivision(2 * math.pi * frequency, 1.0, 0.0);
+        final w0 = MathUtils.safeDivision(2 * math.pi * band.frequency, 1.0, 0.0);
+        
+        // Validate q to prevent division by zero
+        final validQ = q > 0 ? q : 0.1;
+        final alpha = math.sin(w0) / (2 * validQ);
         final a = math.pow(10, gain / 40).toDouble();
         
-        final b0 = 1 + alpha * a;
+        // Validate a to prevent division by zero
+        final validA = a > 0 ? a : 0.001;
+        
+        final b0 = 1 + alpha * validA;
         final b1 = -2 * math.cos(w0);
-        final b2 = 1 - alpha * a;
-        final a0 = 1 + alpha / a;
+        final b2 = 1 - alpha * validA;
+        final a0 = 1 + alpha / validA;
         final a1 = -2 * math.cos(w0);
-        final a2 = 1 - alpha / a;
+        final a2 = 1 - alpha / validA;
+        
+        // Validate denominators to prevent division by zero
+        final denominator = math.pow(a0 + a1 + a2, 2);
+        if (denominator <= 0) return 0;
         
         final h = math.sqrt(
-          (math.pow(b0 + b1 + b2, 2)) / (math.pow(a0 + a1 + a2, 2))
+          (math.pow(b0 + b1 + b2, 2)) / denominator
         );
         
-        return 20 * math.log(h) / math.ln10;
+        // Validate h before logarithm (must be positive)
+        if (h <= 0 || h.isNaN || h.isInfinite) return 0;
+        
+        final logResult = 20 * math.log(h) / math.ln10;
+        return logResult.isNaN || logResult.isInfinite ? 0 : logResult;
       
       case EQBandType.highPass:
-        if (frequency < band.frequency) {
-          final rolloff = -12 * math.log(band.frequency / frequency) / math.ln10;
-          return rolloff;
+        if (frequency < band.frequency && frequency > 0 && band.frequency > 0) {
+          final ratio = band.frequency / frequency;
+          if (ratio <= 0 || ratio.isNaN || ratio.isInfinite) return 0;
+          
+          final rolloff = -12 * math.log(ratio) / math.ln10;
+          return rolloff.isNaN || rolloff.isInfinite ? 0 : rolloff;
         }
         return 0;
       
       case EQBandType.lowPass:
-        if (frequency > band.frequency) {
-          final rolloff = -12 * math.log(frequency / band.frequency) / math.ln10;
-          return rolloff;
+        if (frequency > band.frequency && frequency > 0 && band.frequency > 0) {
+          final ratio = frequency / band.frequency;
+          if (ratio <= 0 || ratio.isNaN || ratio.isInfinite) return 0;
+          
+          final rolloff = -12 * math.log(ratio) / math.ln10;
+          return rolloff.isNaN || rolloff.isInfinite ? 0 : rolloff;
         }
         return 0;
     }
