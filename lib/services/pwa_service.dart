@@ -10,8 +10,7 @@ class PWAService {
   static bool get isInstalled {
     if (kIsWeb) {
       try {
-        return html.window.matchMedia('(display-mode: standalone)').matches ||
-               html.window.navigator.standalone == true;
+        return html.window.matchMedia('(display-mode: standalone)').matches;
       } catch (e) {
         return false;
       }

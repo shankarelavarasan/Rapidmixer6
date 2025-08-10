@@ -299,7 +299,7 @@ class _RapidMixerHomePageState extends State<RapidMixerHomePage>
                      SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, 20)),
                      
                      // PWA Install Widget
-                     PWAInstallWidget(type: PWAInstallType.card),
+                     PWAInstallWidget(showAsCard: true),
                    ],
                  ),
                ),
@@ -308,7 +308,7 @@ class _RapidMixerHomePageState extends State<RapidMixerHomePage>
          ),
        ),
        // PWA Install Floating Button
-       floatingActionButton: PWAInstallWidget(type: PWAInstallType.floatingButton),
+       floatingActionButton: PWAInstallWidget(showAsFloatingButton: true, showAsCard: false),
      );
   }
   

@@ -37,6 +37,9 @@ class AppTheme {
   static const Color shadowDark =
       Color(0x1A000000); // 2dp shadows with 0.1 opacity
   static const Color shadowLight = Color(0x1F000000);
+  
+  // Additional surface colors
+  static const Color surfaceDark = surfaceColor; // Alias for compatibility
 
   // Glassmorphism colors
   static const Color glassBackground = Color(0x0DFFFFFF);
