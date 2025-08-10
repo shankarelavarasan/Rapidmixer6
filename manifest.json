@@ -1,0 +1,40 @@
+{
+    "name": "Rapid Mixer - AI Audio Studio",
+    "short_name": "RapidMixer",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#87ceeb",
+    "description": "Professional AI-powered audio mixing and production studio with stem separation, beat generation, and real-time effects.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "categories": ["music", "audio", "productivity", "entertainment"],
+    "lang": "en",
+    "dir": "ltr",
+    "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

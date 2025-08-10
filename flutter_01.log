@@ -1,0 +1,154 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter build web --release
+
+## exception
+
+ArgumentError: Invalid argument(s): Uri https://fonts.gstatic.com/s/notosans/v36/o-0IIpQlx3QUlC5A4PNr5TRASf6M7Q.ttf must have scheme 'file:'.
+
+```
+#0      WindowsStyle.pathFromUri (package:path/src/style/windows.dart:86:7)
+#1      Context.fromUri (package:path/src/context.dart:1040:40)
+#2      ManifestAssetBundle._resolveAsset (package:flutter_tools/src/asset.dart:1182:47)
+#3      ManifestAssetBundle._parseAssets (package:flutter_tools/src/asset.dart:965:34)
+#4      ManifestAssetBundle.build (package:flutter_tools/src/asset.dart:297:54)
+<asynchronous suspension>
+#5      copyAssets (package:flutter_tools/src/build_system/targets/assets.dart:51:26)
+<asynchronous suspension>
+#6      WebReleaseBundle.build (package:flutter_tools/src/build_system/targets/web.dart:457:29)
+<asynchronous suspension>
+#7      _BuildInstance._invokeInternal (package:flutter_tools/src/build_system/build_system.dart:873:9)
+<asynchronous suspension>
+#8      Future.wait.<anonymous closure> (dart:async/future.dart:525:21)
+<asynchronous suspension>
+#9      _BuildInstance.invokeTarget (package:flutter_tools/src/build_system/build_system.dart:811:32)
+<asynchronous suspension>
+#10     FlutterBuildSystem.build (package:flutter_tools/src/build_system/build_system.dart:629:16)
+<asynchronous suspension>
+#11     WebBuilder.buildWeb (package:flutter_tools/src/web/compile.dart:91:34)
+<asynchronous suspension>
+#12     BuildWebCommand.runCommand (package:flutter_tools/src/commands/build_web.dart:246:5)
+<asynchronous suspension>
+#13     FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1563:27)
+<asynchronous suspension>
+#14     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#15     CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+<asynchronous suspension>
+#16     FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:494:9)
+<asynchronous suspension>
+#17     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#18     FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:431:5)
+<asynchronous suspension>
+#19     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:98:11)
+<asynchronous suspension>
+#20     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#21     main (package:flutter_tools/executable.dart:102:3)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[32m[✓][39m Flutter (Channel stable, 3.32.7, on
+    Microsoft Windows [Version
+    10.0.19045.6093], locale en-US)
+    [1,871ms]
+    [32m•[39m Flutter version 3.32.7 on channel
+      stable at C:\Users\admin\flutter
+    [32m•[39m Upstream repository
+      https://github.com/flutter/flutter.git
+    [32m•[39m Framework revision d7b523b356 (3 weeks
+      ago), 2025-07-15 17:03:46 -0700
+    [32m•[39m Engine revision 39d6d6e699
+    [32m•[39m Dart version 3.8.1
+    [32m•[39m DevTools version 2.45.1
+
+[32m[✓][39m Windows Version (Windows 10, 22H2, 2009)
+    [6.5s]
+
+[33m[!][39m Android toolchain - develop for Android
+    devices (Android SDK version 36.0.0)
+    [32.6s]
+    [32m•[39m Android SDK at
+      C:\Users\admin\AppData\Local\Android\s
+      dk
+    [32m•[39m Platform android-36, build-tools
+      36.0.0
+    [32m•[39m ANDROID_HOME =
+      C:\Users\admin\AppData\Local\Android\S
+      dk
+    [32m•[39m Java binary at: C:\Program
+      Files\Android\Android
+      Studio1\jbr\bin\java
+      This is the JDK bundled with the
+      latest Android Studio installation on
+      this machine.
+      To manually set the JDK path, use:
+      `flutter config
+      --jdk-dir="path/to/jdk"`.
+    [32m•[39m Java version OpenJDK Runtime
+      Environment (build
+      21.0.6+-13368085-b895.109)
+    [33m![39m Some Android licenses not accepted. To
+      resolve this, run: flutter doctor
+      --android-licenses
+
+[32m[✓][39m Chrome - develop for the web [859ms]
+    [32m•[39m Chrome at C:\Program
+      Files\Google\Chrome\Application\chrome
+      .exe
+
+[32m[✓][39m Visual Studio - develop Windows apps
+    (Visual Studio Build Tools 2019
+    16.11.49) [856ms]
+    [32m•[39m Visual Studio at C:\Program Files
+      (x86)\Microsoft Visual
+      Studio\2019\BuildTools
+    [32m•[39m Visual Studio Build Tools 2019 version
+      16.11.36227.6
+    [32m•[39m Windows 10 SDK version 10.0.19041.0
+
+[32m[✓][39m Android Studio (version 2024.3.2) [51ms]
+    [32m•[39m Android Studio at C:\Program
+      Files\Android\Android Studio1
+    [32m•[39m Flutter plugin can be installed from:
+      🔨
+      https://plugins.jetbrains.com/plugin/9
+      212-flutter
+    [32m•[39m Dart plugin can be installed from:
+      🔨
+      https://plugins.jetbrains.com/plugin/6
+      351-dart
+    [32m•[39m Java version OpenJDK Runtime
+      Environment (build
+      21.0.6+-13368085-b895.109)
+
+[32m[✓][39m VS Code (version 1.102.3) [48ms]
+    [32m•[39m VS Code at
+      C:\Users\admin\AppData\Local\Programs\
+      Microsoft VS Code
+    [32m•[39m Flutter extension version 3.116.0
+
+[32m[✓][39m Connected device (3 available) [503ms]
+    [32m•[39m Windows (desktop) • windows •
+      windows-x64    • Microsoft Windows
+      [Version 10.0.19045.6093]
+    [32m•[39m Chrome (web)      • chrome  •
+      web-javascript • Google Chrome
+      138.0.7204.184
+    [32m•[39m Edge (web)        • edge    •
+      web-javascript • Microsoft Edge
+      138.0.3351.121
+
+[32m[✓][39m Network resources [663ms]
+    [32m•[39m All expected network resources are
+      available.
+
+[33m![39m Doctor found issues in 1 category.
+```
